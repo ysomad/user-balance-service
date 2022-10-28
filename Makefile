@@ -28,9 +28,9 @@ run-migrate:
 .PHONY: gen-oapi
 gen-oapi:
 	oapi-codegen \
-	--package handler \
+	--package v1 \
 	-generate chi-server,types \
-	./api/openapi3.yaml > ./internal/handler/handler.gen.go
+	./api/openapi3_v1.yaml > ./internal/handler/v1/handler.gen.go
 
 .PHONY: test
 test:

@@ -15,14 +15,14 @@ tags:
 - name: report
   description: Operations with revenue report
 paths:
-  /wallets/{userId}:
+  /wallets/{user_id}:
     get:
       tags:
       - wallet
       summary: Add funds to the user wallet
       operationId: getWallet
       parameters:
-      - name: userId
+      - name: user_id
         in: path
         description: user id in uuid format
         required: true
@@ -31,6 +31,11 @@ paths:
         schema:
           type: string
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        x-go-name: UserID
       responses:
         "200":
           description: OK.
@@ -62,7 +67,7 @@ paths:
       summary: Add funds to the user wallet
       operationId: addFunds
       parameters:
-      - name: userId
+      - name: user_id
         in: path
         description: user id in uuid format
         required: true
@@ -71,6 +76,10 @@ paths:
         schema:
           type: string
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
       requestBody:
         $ref: '#/components/requestBodies/AddFundsRequestBody'
       responses:
@@ -92,14 +101,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /wallets/{userId}/transactions:
+  /wallets/{user_id}/transactions:
     post:
       tags:
       - wallet
       summary: Get list of wallet transactions
       operationId: getTransactions
       parameters:
-      - name: userId
+      - name: user_id
         in: path
         description: user id in uuid format
         required: true
@@ -108,6 +117,10 @@ paths:
         schema:
           type: string
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
       requestBody:
         $ref: '#/components/requestBodies/TransactionListRequestBody'
       responses:
@@ -129,14 +142,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /reserve/{userId}:
+  /reserve/{user_id}:
     post:
       tags:
       - reserve
       summary: Reserve funds on the user wallet
       operationId: reserveFunds
       parameters:
-      - name: userId
+      - name: user_id
         in: path
         description: user id in uuid format
         required: true
@@ -145,6 +158,10 @@ paths:
         schema:
           type: string
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
       requestBody:
         $ref: '#/components/requestBodies/ReserveFundsRequestBody'
       responses:
@@ -172,7 +189,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /reserve/{userId}/revenue:
+  /reserve/{user_id}/revenue:
     post:
       tags:
       - reserve
@@ -180,7 +197,7 @@ paths:
       description: Writes off money from the reserve wallet and adds it to the accounting report
       operationId: declareRevenue
       parameters:
-      - name: userId
+      - name: user_id
         in: path
         description: user id in uuid format
         required: true
@@ -189,6 +206,10 @@ paths:
         schema:
           type: string
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
       requestBody:
         $ref: '#/components/requestBodies/DeclareRevenueRequestBody'
       responses:
@@ -266,20 +287,30 @@ components:
       required:
       - balance
       - id
-      - reservedBalance
-      - userId
+      - reserved_balance
+      - user_id
       type: object
       properties:
         id:
           type: string
           format: uuid
-        userId:
+          x-go-name: ID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        user_id:
           type: string
           format: uuid
+          x-go-name: UserID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
         balance:
           type: string
           example: "49.543"
-        reservedBalance:
+        reserved_balance:
           type: string
           example: "11.79"
     TransactionOperation:
@@ -294,15 +325,25 @@ components:
       - from
       - id
       - operation
-      - userId
+      - user_id
       type: object
       properties:
         id:
           type: string
           format: uuid
-        userId:
+          x-go-name: ID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        user_id:
           type: string
           format: uuid
+          x-go-name: UserID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
         comment:
           type: string
           example: deposit from billing
@@ -310,6 +351,10 @@ components:
           type: string
           description: empty means operation was initiated by billing
           format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
         amount:
           type: string
           example: "33.78"
@@ -317,7 +362,7 @@ components:
           $ref: '#/components/schemas/TransactionOperation'
     TransactionList:
       required:
-      - nextPageCursor
+      - next_page_cursor
       - transactions
       type: object
       properties:
@@ -325,7 +370,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transaction'
-        nextPageCursor:
+        next_page_cursor:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
     AddFundsRequest:
@@ -339,43 +384,64 @@ components:
     ReserveFundsRequest:
       required:
       - cost
-      - orderId
-      - serviceId
+      - order_id
+      - service_id
       type: object
       properties:
-        serviceId:
+        service_id:
           type: string
           format: uuid
-        orderId:
+          x-go-name: ServiceID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        order_id:
           type: string
           format: uuid
+          x-go-name: OrderID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
         cost:
           type: string
           example: "75.487"
     DeclareRevenueRequest:
       required:
       - cost
-      - orderId
-      - serviceId
+      - order_id
+      - service_id
       type: object
       properties:
-        serviceId:
+        service_id:
           type: string
           format: uuid
-        orderId:
+          x-go-name: ServiceID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        order_id:
           type: string
           format: uuid
+          x-go-name: OrderID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
         cost:
           type: string
           example: "75.487"
     RevenueReportResponse:
       required:
-      - reportUrl
+      - report_url
       type: object
       properties:
-        reportUrl:
+        report_url:
           type: string
           format: uri
+          x-go-name: ReportURL
     SortOrder:
       type: string
       enum:
@@ -393,13 +459,13 @@ components:
           $ref: '#/components/schemas/SortOrder'
     TransactionListRequest:
       required:
-      - nextPageCursor
+      - page_cursor
       - sort
       type: object
       properties:
         sort:
           $ref: '#/components/schemas/TransactionListSort'
-        nextPageCursor:
+        page_cursor:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
   requestBodies:
