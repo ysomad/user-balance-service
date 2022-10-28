@@ -6,7 +6,7 @@ info:
     User wallet API for managing user wallet balance.
   version: 1.0.0
 servers:
-- url: http://localhost:8080
+- url: http://localhost:8080/v1
 tags:
 - name: wallet
   description: Operations with user wallet
