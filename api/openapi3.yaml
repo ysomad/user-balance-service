@@ -1,0 +1,429 @@
+---
+openapi: 3.0.0
+info:
+  title: User Wallet API
+  description: |
+    User wallet API for managing user wallet balance.
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+tags:
+- name: wallet
+  description: Operations with user wallet
+- name: reserve
+  description: Operations with user reserve wallet
+- name: report
+  description: Operations with revenue report
+paths:
+  /wallets/{userId}:
+    get:
+      tags:
+      - wallet
+      summary: Add funds to the user wallet
+      operationId: getWallet
+      parameters:
+      - name: userId
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        "400":
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Wallet Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+      - wallet
+      summary: Add funds to the user wallet
+      operationId: addFunds
+      parameters:
+      - name: userId
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/AddFundsRequestBody'
+      responses:
+        "200":
+          description: Money added to wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /wallets/{userId}/transactions:
+    post:
+      tags:
+      - wallet
+      summary: Get list of wallet transactions
+      operationId: getTransactions
+      parameters:
+      - name: userId
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/TransactionListRequestBody'
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reserve/{userId}:
+    post:
+      tags:
+      - reserve
+      summary: Reserve funds on the user wallet
+      operationId: reserveFunds
+      parameters:
+      - name: userId
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/ReserveFundsRequestBody'
+      responses:
+        "200":
+          description: Money reserved on the wallet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Wallet Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reserve/{userId}/revenue:
+    post:
+      tags:
+      - reserve
+      summary: Declare revenue
+      description: Writes off money from the reserve wallet and adds it to the accounting report
+      operationId: declareRevenue
+      parameters:
+      - name: userId
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/DeclareRevenueRequestBody'
+      responses:
+        "200":
+          description: All reserved money were added to the report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Wallet Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reports/{month}:
+    get:
+      tags:
+      - report
+      summary: Get revenue report
+      description: test
+      operationId: getRevenueReport
+      parameters:
+      - name: month
+        in: path
+        description: month of specific year in format "2022-12"
+        required: true
+        style: simple
+        explode: false
+        schema:
+          pattern: ^\d{4}\-(0?[1-9]|1[012])$
+          type: string
+          example: 2022-10
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueReportResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+    Wallet:
+      required:
+      - balance
+      - id
+      - reservedBalance
+      - userId
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        balance:
+          type: string
+          example: "49.543"
+        reservedBalance:
+          type: string
+          example: "11.79"
+    TransactionOperation:
+      type: string
+      enum:
+      - WITHDRAW
+      - DEPOSIT
+    Transaction:
+      required:
+      - amount
+      - comment
+      - from
+      - id
+      - operation
+      - userId
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        comment:
+          type: string
+          example: deposit from billing
+        from:
+          type: string
+          description: empty means operation was initiated by billing
+          format: uuid
+        amount:
+          type: string
+          example: "33.78"
+        operation:
+          $ref: '#/components/schemas/TransactionOperation'
+    TransactionList:
+      required:
+      - nextPageCursor
+      - transactions
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        nextPageCursor:
+          type: string
+          example: U3dhZ2dlciByb2Nrcw==
+    AddFundsRequest:
+      required:
+      - amount
+      type: object
+      properties:
+        amount:
+          type: string
+          example: "35.4768"
+    ReserveFundsRequest:
+      required:
+      - cost
+      - orderId
+      - serviceId
+      type: object
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        cost:
+          type: string
+          example: "75.487"
+    DeclareRevenueRequest:
+      required:
+      - cost
+      - orderId
+      - serviceId
+      type: object
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        cost:
+          type: string
+          example: "75.487"
+    RevenueReportResponse:
+      required:
+      - reportUrl
+      type: object
+      properties:
+        reportUrl:
+          type: string
+          format: uri
+    SortOrder:
+      type: string
+      enum:
+      - ASC
+      - DESC
+    TransactionListSort:
+      required:
+      - amount
+      - date
+      type: object
+      properties:
+        date:
+          $ref: '#/components/schemas/SortOrder'
+        amount:
+          $ref: '#/components/schemas/SortOrder'
+    TransactionListRequest:
+      required:
+      - nextPageCursor
+      - sort
+      type: object
+      properties:
+        sort:
+          $ref: '#/components/schemas/TransactionListSort'
+        nextPageCursor:
+          type: string
+          example: U3dhZ2dlciByb2Nrcw==
+  requestBodies:
+    AddFundsRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AddFundsRequest'
+      required: true
+    ReserveFundsRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReserveFundsRequest'
+      required: true
+    DeclareRevenueRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DeclareRevenueRequest'
+      required: true
+    TransactionListRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransactionListRequest'
+      required: true
