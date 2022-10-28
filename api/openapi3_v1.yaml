@@ -6,7 +6,7 @@ info:
     User wallet API for managing user wallet balance.
   version: 1.0.0
 servers:
-- url: http://localhost:8080/v1
+- url: http://localhost:8080
 tags:
 - name: wallet
   description: Operations with user wallet
@@ -309,7 +309,7 @@ components:
             path: github.com/google/uuid
         balance:
           type: string
-          example: "49.543"
+          example: "49.54"
         reserved_balance:
           type: string
           example: "11.79"
@@ -380,7 +380,7 @@ components:
       properties:
         amount:
           type: string
-          example: "35.4768"
+          example: "35.47"
     ReserveFundsRequest:
       required:
       - cost
@@ -406,7 +406,7 @@ components:
             path: github.com/google/uuid
         cost:
           type: string
-          example: "75.487"
+          example: "75.48"
     DeclareRevenueRequest:
       required:
       - cost
@@ -432,7 +432,7 @@ components:
             path: github.com/google/uuid
         cost:
           type: string
-          example: "75.487"
+          example: "75.48"
     RevenueReportResponse:
       required:
       - report_url
