@@ -64,8 +64,8 @@ paths:
     put:
       tags:
       - wallet
-      summary: Add funds to the user wallet
-      operationId: addFunds
+      summary: Deposit funds to the user wallet
+      operationId: depositIntoWallet
       parameters:
       - name: user_id
         in: path
@@ -106,7 +106,7 @@ paths:
       tags:
       - wallet
       summary: Get list of wallet transactions
-      operationId: getTransactions
+      operationId: getWalletTransactions
       parameters:
       - name: user_id
         in: path
@@ -147,7 +147,7 @@ paths:
       tags:
       - reserve
       summary: Reserve funds on the user wallet
-      operationId: reserveFunds
+      operationId: reserveWalletFunds
       parameters:
       - name: user_id
         in: path

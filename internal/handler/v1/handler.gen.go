@@ -109,17 +109,17 @@ type ReserveFundsRequestBody = ReserveFundsRequest
 // TransactionListRequestBody defines model for TransactionListRequestBody.
 type TransactionListRequestBody = TransactionListRequest
 
-// ReserveFundsJSONRequestBody defines body for ReserveFunds for application/json ContentType.
-type ReserveFundsJSONRequestBody = ReserveFundsRequest
+// ReserveWalletFundsJSONRequestBody defines body for ReserveWalletFunds for application/json ContentType.
+type ReserveWalletFundsJSONRequestBody = ReserveFundsRequest
 
 // DeclareRevenueJSONRequestBody defines body for DeclareRevenue for application/json ContentType.
 type DeclareRevenueJSONRequestBody = DeclareRevenueRequest
 
-// AddFundsJSONRequestBody defines body for AddFunds for application/json ContentType.
-type AddFundsJSONRequestBody = AddFundsRequest
+// DepositIntoWalletJSONRequestBody defines body for DepositIntoWallet for application/json ContentType.
+type DepositIntoWalletJSONRequestBody = AddFundsRequest
 
-// GetTransactionsJSONRequestBody defines body for GetTransactions for application/json ContentType.
-type GetTransactionsJSONRequestBody = TransactionListRequest
+// GetWalletTransactionsJSONRequestBody defines body for GetWalletTransactions for application/json ContentType.
+type GetWalletTransactionsJSONRequestBody = TransactionListRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -128,19 +128,19 @@ type ServerInterface interface {
 	GetRevenueReport(w http.ResponseWriter, r *http.Request, month string)
 	// Reserve funds on the user wallet
 	// (POST /reserve/{user_id})
-	ReserveFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	ReserveWalletFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Declare revenue
 	// (POST /reserve/{user_id}/revenue)
 	DeclareRevenue(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Add funds to the user wallet
 	// (GET /wallets/{user_id})
 	GetWallet(w http.ResponseWriter, r *http.Request, userID google_uuid.UUID)
-	// Add funds to the user wallet
+	// Deposit funds to the user wallet
 	// (PUT /wallets/{user_id})
-	AddFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	DepositIntoWallet(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Get list of wallet transactions
 	// (POST /wallets/{user_id}/transactions)
-	GetTransactions(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	GetWalletTransactions(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -178,8 +178,8 @@ func (siw *ServerInterfaceWrapper) GetRevenueReport(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// ReserveFunds operation middleware
-func (siw *ServerInterfaceWrapper) ReserveFunds(w http.ResponseWriter, r *http.Request) {
+// ReserveWalletFunds operation middleware
+func (siw *ServerInterfaceWrapper) ReserveWalletFunds(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -194,7 +194,7 @@ func (siw *ServerInterfaceWrapper) ReserveFunds(w http.ResponseWriter, r *http.R
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ReserveFunds(w, r, userId)
+		siw.Handler.ReserveWalletFunds(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -256,8 +256,8 @@ func (siw *ServerInterfaceWrapper) GetWallet(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// AddFunds operation middleware
-func (siw *ServerInterfaceWrapper) AddFunds(w http.ResponseWriter, r *http.Request) {
+// DepositIntoWallet operation middleware
+func (siw *ServerInterfaceWrapper) DepositIntoWallet(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -272,7 +272,7 @@ func (siw *ServerInterfaceWrapper) AddFunds(w http.ResponseWriter, r *http.Reque
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.AddFunds(w, r, userId)
+		siw.Handler.DepositIntoWallet(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -282,8 +282,8 @@ func (siw *ServerInterfaceWrapper) AddFunds(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// GetTransactions operation middleware
-func (siw *ServerInterfaceWrapper) GetTransactions(w http.ResponseWriter, r *http.Request) {
+// GetWalletTransactions operation middleware
+func (siw *ServerInterfaceWrapper) GetWalletTransactions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -298,7 +298,7 @@ func (siw *ServerInterfaceWrapper) GetTransactions(w http.ResponseWriter, r *htt
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetTransactions(w, r, userId)
+		siw.Handler.GetWalletTransactions(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -425,7 +425,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/reports/{month}", wrapper.GetRevenueReport)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/reserve/{user_id}", wrapper.ReserveFunds)
+		r.Post(options.BaseURL+"/reserve/{user_id}", wrapper.ReserveWalletFunds)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/reserve/{user_id}/revenue", wrapper.DeclareRevenue)
@@ -434,10 +434,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/wallets/{user_id}", wrapper.GetWallet)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/wallets/{user_id}", wrapper.AddFunds)
+		r.Put(options.BaseURL+"/wallets/{user_id}", wrapper.DepositIntoWallet)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/wallets/{user_id}/transactions", wrapper.GetTransactions)
+		r.Post(options.BaseURL+"/wallets/{user_id}/transactions", wrapper.GetWalletTransactions)
 	})
 
 	return r
