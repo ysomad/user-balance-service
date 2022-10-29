@@ -30,7 +30,7 @@ gen-oapi:
 	oapi-codegen \
 	--package v1 \
 	-generate chi-server,types \
-	./api/openapi3_v1.yaml > ./internal/handler/v1/v1.gen.go
+	./api/openapi3_v1.yaml > ./internal/handler/v1/handler.gen.go
 
 .PHONY: test
 test:

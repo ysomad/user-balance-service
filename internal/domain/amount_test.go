@@ -208,7 +208,7 @@ func TestNewAmount(t *testing.T) {
 	}
 }
 
-func Test_amount_UInt64(t *testing.T) {
+func TestAmount_UInt64(t *testing.T) {
 	tests := []struct {
 		name string
 		a    Amount
@@ -229,7 +229,7 @@ func Test_amount_UInt64(t *testing.T) {
 	}
 }
 
-func Test_amount_LargeUnit(t *testing.T) {
+func TestAmount_LargeUnit(t *testing.T) {
 	tests := []struct {
 		name string
 		a    Amount
@@ -270,7 +270,7 @@ func Test_amount_LargeUnit(t *testing.T) {
 	}
 }
 
-func Test_amount_SmallUnit(t *testing.T) {
+func TestAmount_SmallUnit(t *testing.T) {
 	tests := []struct {
 		name string
 		a    Amount
@@ -331,7 +331,7 @@ func Test_amount_SmallUnit(t *testing.T) {
 	}
 }
 
-func Test_amount_MajorUnits(t *testing.T) {
+func TestAmount_MajorUnits(t *testing.T) {
 	tests := []struct {
 		name string
 		a    Amount
@@ -365,8 +365,34 @@ func Test_amount_MajorUnits(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.a.MajorUnits(); got != tt.want {
+			if got := tt.a.String(); got != tt.want {
 				t.Errorf("amount.String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAmount_IsZero(t *testing.T) {
+	tests := []struct {
+		name string
+		a    Amount
+		want bool
+	}{
+		{
+			name: "true",
+			a:    Amount(0),
+			want: true,
+		},
+		{
+			name: "false",
+			a:    Amount(124123),
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.a.IsZero(); got != tt.want {
+				t.Errorf("Amount.IsZero() = %v, want %v", got, tt.want)
 			}
 		})
 	}

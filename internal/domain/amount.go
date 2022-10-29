@@ -40,10 +40,11 @@ func NewAmount(major string) (Amount, error) {
 	return Amount((largeUnit * 100) + smallUnit), nil
 }
 
-func (a Amount) MajorUnits() string {
+func (a Amount) String() string {
 	return strconv.FormatUint(a.LargeUnit(), 10) + "." + strconv.FormatUint(a.SmallUnit(), 10)
 }
 
 func (a Amount) UInt64() uint64    { return uint64(a) }
 func (a Amount) LargeUnit() uint64 { return uint64(a) / 100 }
 func (a Amount) SmallUnit() uint64 { return uint64(a) % 100 }
+func (a Amount) IsZero() bool      { return a == 0 }

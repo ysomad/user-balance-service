@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/ysomad/avito-internship-task/httpserver"
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/config"
@@ -34,19 +35,24 @@ func Run(conf *config.Config) {
 	}
 	defer pgClient.Close()
 
-	db := pg.NewDB(pgClient)
-
 	validator, err := validate.New()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
+	transactor := pg.NewTransactor(pgClient.Pool)
+
 	// services
-	walletService := service.NewWallet(db, db, db)
+	transactionRepo := pg.NewTransactionRepo(pgClient)
+
+	accountRepo := pg.NewAccountRepo(pgClient)
+	accountService := service.NewAccount(accountRepo, transactionRepo)
 
 	// init handlers
 	mux := chi.NewMux()
-	handlerV1 := v1.NewHandler(log, validator, walletService)
+	mux.Use(middleware.Logger, middleware.Recoverer)
+
+	handlerV1 := v1.NewHandler(log, validator, transactor, accountService)
 	v1.HandlerFromMuxWithBaseURL(handlerV1, mux, "/v1")
 
 	runHTTPServer(mux, log, conf.HTTP.Port)
