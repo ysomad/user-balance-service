@@ -8,7 +8,7 @@ import (
 func TestNewDepositTransaction(t *testing.T) {
 	type args struct {
 		userID string
-		a      amount
+		a      Amount
 	}
 	tests := []struct {
 		name    string

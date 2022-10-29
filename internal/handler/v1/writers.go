@@ -14,8 +14,7 @@ func writeError(w http.ResponseWriter, code int, err error, details map[string]s
 	})
 }
 
-func writeJSON(w http.ResponseWriter, code int, v any) {
+func writeOK(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
-	w.WriteHeader(code)
 }

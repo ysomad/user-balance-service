@@ -7,8 +7,7 @@ var (
 )
 
 type Wallet struct {
-	ID       string
-	UserID   string
-	Balance  amount
-	Reserved amount
+	ID      string
+	UserID  string
+	Balance Amount
 }

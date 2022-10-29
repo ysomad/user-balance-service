@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -17,17 +18,23 @@ func (h *handler) AddFunds(w http.ResponseWriter, r *http.Request, userID uuid.U
 
 	wallet, err := h.wallet.AddFunds(r.Context(), userID.String(), req.Amount)
 	if err != nil {
-		h.log.Error(err.Error())
-		// TODO: handle specific errors
+		h.log.Errorf("v1 - AddFunds: %s", err.Error())
+
+		switch {
+		case errors.Is(err, domain.ErrInvalidMajorAmount):
+			writeError(w, http.StatusBadRequest, errInvalidRequestBody, map[string]string{
+				"amount": err.Error(),
+			})
+			return
+		}
 
 		writeError(w, http.StatusInternalServerError, domain.ErrFundsNotAdded, nil)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, Wallet{
-		ID:       wallet.ID,
-		UserID:   wallet.UserID,
-		Balance:  wallet.Balance.MajorUnits(),
-		Reserved: wallet.Reserved.MajorUnits(),
+	writeOK(w, Wallet{
+		ID:      wallet.ID,
+		UserID:  wallet.UserID,
+		Balance: wallet.Balance.MajorUnits(),
 	})
 }

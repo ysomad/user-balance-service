@@ -11,6 +11,7 @@ import (
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/config"
 	v1 "github.com/ysomad/avito-internship-task/internal/handler/v1"
+	"github.com/ysomad/avito-internship-task/internal/pg"
 	"github.com/ysomad/avito-internship-task/internal/service"
 	"github.com/ysomad/avito-internship-task/validate"
 
@@ -27,11 +28,13 @@ func Run(conf *config.Config) {
 	)
 
 	// dependencies
-	pg, err := pgclient.New(conf.PG.URL, pgclient.WithMaxConns(conf.PG.MaxConns))
+	pgClient, err := pgclient.New(conf.PG.URL, pgclient.WithMaxConns(conf.PG.MaxConns))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer pg.Close()
+	defer pgClient.Close()
+
+	db := pg.NewDB(pgClient)
 
 	validator, err := validate.New()
 	if err != nil {
@@ -39,7 +42,7 @@ func Run(conf *config.Config) {
 	}
 
 	// services
-	walletService := service.NewWallet()
+	walletService := service.NewWallet(db, db, db)
 
 	// init handlers
 	mux := chi.NewMux()

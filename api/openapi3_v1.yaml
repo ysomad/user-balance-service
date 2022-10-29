@@ -294,7 +294,6 @@ components:
       required:
       - balance
       - id
-      - reserved
       - user_id
       type: object
       properties:
@@ -311,9 +310,6 @@ components:
         balance:
           type: string
           example: "49.54"
-        reserved:
-          type: string
-          example: "11.79"
     TransactionOperation:
       type: string
       enum:

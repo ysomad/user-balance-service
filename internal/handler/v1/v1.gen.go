@@ -93,10 +93,9 @@ type TransactionOperation string
 
 // Wallet defines model for Wallet.
 type Wallet struct {
-	Balance  string `json:"balance"`
-	ID       string `json:"id"`
-	Reserved string `json:"reserved"`
-	UserID   string `json:"user_id"`
+	Balance string `json:"balance"`
+	ID      string `json:"id"`
+	UserID  string `json:"user_id"`
 }
 
 // AddFundsRequestBody defines model for AddFundsRequestBody.

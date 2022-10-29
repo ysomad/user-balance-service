@@ -13,7 +13,7 @@ type Transaction struct {
 
 	// from where funds was withdrawn or deposited
 	// if empty that means funds came from billing.
-	FromUserID string
+	FromUserID *string
 
 	// amount of funds withdrawn or deposited.
 	Amount uint64
@@ -24,18 +24,22 @@ type Transaction struct {
 
 // DepositTransaction represents transaction for deposits.
 type DepositTransaction struct {
-	UserID    string
-	Comment   string
-	Operation operation
-
-	amount amount
+	userID    string
+	comment   string
+	operation operation
+	amount    Amount
 }
 
-func NewDepositTransaction(userID string, a amount) (DepositTransaction, error) {
+func NewDepositTransaction(userID string, a Amount) (DepositTransaction, error) {
 	return DepositTransaction{
-		UserID:    userID,
-		Comment:   "billing deposit",
+		userID:    userID,
+		comment:   "billing deposit",
 		amount:    a,
-		Operation: operationDeposit,
+		operation: operationDeposit,
 	}, nil
 }
+
+func (t DepositTransaction) UserID() string       { return t.userID }
+func (t DepositTransaction) Amount() Amount       { return t.amount }
+func (t DepositTransaction) Comment() string      { return t.comment }
+func (t DepositTransaction) Operation() operation { return t.operation }

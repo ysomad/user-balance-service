@@ -30,7 +30,6 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
