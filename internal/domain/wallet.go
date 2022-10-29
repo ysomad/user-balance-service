@@ -1,8 +1,14 @@
 package domain
 
+import "errors"
+
+var (
+	ErrFundsNotAdded = errors.New("error occured during processing funds")
+)
+
 type Wallet struct {
-	ID      string
-	UserID  string
-	Balance uint64
-	Reserve uint64
+	ID       string
+	UserID   string
+	Balance  amount
+	Reserved amount
 }

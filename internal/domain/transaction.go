@@ -1,6 +1,8 @@
 package domain
 
-import "time"
+import (
+	"time"
+)
 
 type Transaction struct {
 	ID     string
@@ -18,4 +20,22 @@ type Transaction struct {
 
 	Operation   operation
 	CompletedAt time.Time
+}
+
+// DepositTransaction represents transaction for deposits.
+type DepositTransaction struct {
+	UserID    string
+	Comment   string
+	Operation operation
+
+	amount amount
+}
+
+func NewDepositTransaction(userID string, a amount) (DepositTransaction, error) {
+	return DepositTransaction{
+		UserID:    userID,
+		Comment:   "billing deposit",
+		amount:    a,
+		Operation: operationDeposit,
+	}, nil
 }

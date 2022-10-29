@@ -11,6 +11,8 @@ import (
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/config"
 	v1 "github.com/ysomad/avito-internship-task/internal/handler/v1"
+	"github.com/ysomad/avito-internship-task/internal/service"
+	"github.com/ysomad/avito-internship-task/validate"
 
 	"github.com/ysomad/avito-internship-task/logger"
 	"github.com/ysomad/avito-internship-task/pgclient"
@@ -31,11 +33,17 @@ func Run(conf *config.Config) {
 	}
 	defer pg.Close()
 
+	validator, err := validate.New()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	// services
+	walletService := service.NewWallet()
 
 	// init handlers
 	mux := chi.NewMux()
-	handlerV1 := v1.NewHandler(log)
+	handlerV1 := v1.NewHandler(log, validator, walletService)
 	v1.HandlerFromMuxWithBaseURL(handlerV1, mux, "/v1")
 
 	runHTTPServer(mux, log, conf.HTTP.Port)

@@ -26,26 +26,28 @@ const (
 
 // AddFundsRequest defines model for AddFundsRequest.
 type AddFundsRequest struct {
-	Amount string `json:"amount"`
+	Amount string `json:"amount" validate:"required"`
 }
 
 // DeclareRevenueRequest defines model for DeclareRevenueRequest.
 type DeclareRevenueRequest struct {
-	Cost      string           `json:"cost"`
-	OrderID   google_uuid.UUID `json:"order_id"`
-	ServiceID google_uuid.UUID `json:"service_id"`
+	Amount    string           `json:"amount" validate:"required"`
+	OrderID   google_uuid.UUID `json:"order_id" validate:"required,uuid4"`
+	ServiceID google_uuid.UUID `json:"service_id" validate:"required,uuid4"`
 }
 
 // Error defines model for Error.
 type Error struct {
-	Message string `json:"message"`
+	Code    string            `json:"code"`
+	Details map[string]string `json:"details"`
+	Message string            `json:"message"`
 }
 
 // ReserveFundsRequest defines model for ReserveFundsRequest.
 type ReserveFundsRequest struct {
-	Cost      string           `json:"cost"`
-	OrderID   google_uuid.UUID `json:"order_id"`
-	ServiceID google_uuid.UUID `json:"service_id"`
+	Amount    string           `json:"amount" validate:"required"`
+	OrderID   google_uuid.UUID `json:"order_id" validate:"required,uuid4"`
+	ServiceID google_uuid.UUID `json:"service_id" validate:"required,uuid4"`
 }
 
 // RevenueReportResponse defines model for RevenueReportResponse.
@@ -91,10 +93,10 @@ type TransactionOperation string
 
 // Wallet defines model for Wallet.
 type Wallet struct {
-	Balance         string           `json:"balance"`
-	ID              google_uuid.UUID `json:"id"`
-	ReservedBalance string           `json:"reserved_balance"`
-	UserID          google_uuid.UUID `json:"user_id"`
+	Balance  string `json:"balance"`
+	ID       string `json:"id"`
+	Reserved string `json:"reserved"`
+	UserID   string `json:"user_id"`
 }
 
 // AddFundsRequestBody defines model for AddFundsRequestBody.
@@ -109,14 +111,14 @@ type ReserveFundsRequestBody = ReserveFundsRequest
 // TransactionListRequestBody defines model for TransactionListRequestBody.
 type TransactionListRequestBody = TransactionListRequest
 
-// ReserveWalletFundsJSONRequestBody defines body for ReserveWalletFunds for application/json ContentType.
-type ReserveWalletFundsJSONRequestBody = ReserveFundsRequest
+// ReserveFundsJSONRequestBody defines body for ReserveFunds for application/json ContentType.
+type ReserveFundsJSONRequestBody = ReserveFundsRequest
 
 // DeclareRevenueJSONRequestBody defines body for DeclareRevenue for application/json ContentType.
 type DeclareRevenueJSONRequestBody = DeclareRevenueRequest
 
-// DepositIntoWalletJSONRequestBody defines body for DepositIntoWallet for application/json ContentType.
-type DepositIntoWalletJSONRequestBody = AddFundsRequest
+// AddFundsJSONRequestBody defines body for AddFunds for application/json ContentType.
+type AddFundsJSONRequestBody = AddFundsRequest
 
 // GetWalletTransactionsJSONRequestBody defines body for GetWalletTransactions for application/json ContentType.
 type GetWalletTransactionsJSONRequestBody = TransactionListRequest
@@ -128,16 +130,16 @@ type ServerInterface interface {
 	GetRevenueReport(w http.ResponseWriter, r *http.Request, month string)
 	// Reserve funds on the user wallet
 	// (POST /reserve/{user_id})
-	ReserveWalletFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	ReserveFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Declare revenue
 	// (POST /reserve/{user_id}/revenue)
 	DeclareRevenue(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Add funds to the user wallet
 	// (GET /wallets/{user_id})
-	GetWallet(w http.ResponseWriter, r *http.Request, userID google_uuid.UUID)
+	GetWallet(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Deposit funds to the user wallet
 	// (PUT /wallets/{user_id})
-	DepositIntoWallet(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	AddFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Get list of wallet transactions
 	// (POST /wallets/{user_id}/transactions)
 	GetWalletTransactions(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
@@ -178,8 +180,8 @@ func (siw *ServerInterfaceWrapper) GetRevenueReport(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// ReserveWalletFunds operation middleware
-func (siw *ServerInterfaceWrapper) ReserveWalletFunds(w http.ResponseWriter, r *http.Request) {
+// ReserveFunds operation middleware
+func (siw *ServerInterfaceWrapper) ReserveFunds(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -194,7 +196,7 @@ func (siw *ServerInterfaceWrapper) ReserveWalletFunds(w http.ResponseWriter, r *
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ReserveWalletFunds(w, r, userId)
+		siw.Handler.ReserveFunds(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -237,16 +239,16 @@ func (siw *ServerInterfaceWrapper) GetWallet(w http.ResponseWriter, r *http.Requ
 	var err error
 
 	// ------------- Path parameter "user_id" -------------
-	var userID google_uuid.UUID
+	var userId google_uuid.UUID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "user_id", runtime.ParamLocationPath, chi.URLParam(r, "user_id"), &userID)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "user_id", runtime.ParamLocationPath, chi.URLParam(r, "user_id"), &userId)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "user_id", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetWallet(w, r, userID)
+		siw.Handler.GetWallet(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -256,8 +258,8 @@ func (siw *ServerInterfaceWrapper) GetWallet(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// DepositIntoWallet operation middleware
-func (siw *ServerInterfaceWrapper) DepositIntoWallet(w http.ResponseWriter, r *http.Request) {
+// AddFunds operation middleware
+func (siw *ServerInterfaceWrapper) AddFunds(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -272,7 +274,7 @@ func (siw *ServerInterfaceWrapper) DepositIntoWallet(w http.ResponseWriter, r *h
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DepositIntoWallet(w, r, userId)
+		siw.Handler.AddFunds(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -425,7 +427,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/reports/{month}", wrapper.GetRevenueReport)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/reserve/{user_id}", wrapper.ReserveWalletFunds)
+		r.Post(options.BaseURL+"/reserve/{user_id}", wrapper.ReserveFunds)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/reserve/{user_id}/revenue", wrapper.DeclareRevenue)
@@ -434,7 +436,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/wallets/{user_id}", wrapper.GetWallet)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/wallets/{user_id}", wrapper.DepositIntoWallet)
+		r.Put(options.BaseURL+"/wallets/{user_id}", wrapper.AddFunds)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/wallets/{user_id}/transactions", wrapper.GetWalletTransactions)

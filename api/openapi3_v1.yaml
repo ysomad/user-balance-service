@@ -6,7 +6,7 @@ info:
     User wallet API for managing user wallet balance.
   version: 1.0.0
 servers:
-- url: http://localhost:8080
+- url: http://localhost:8080/v1
 tags:
 - name: wallet
   description: Operations with user wallet
@@ -35,7 +35,6 @@ paths:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
-        x-go-name: UserID
       responses:
         "200":
           description: OK.
@@ -65,7 +64,7 @@ paths:
       tags:
       - wallet
       summary: Deposit funds to the user wallet
-      operationId: depositIntoWallet
+      operationId: addFunds
       parameters:
       - name: user_id
         in: path
@@ -147,7 +146,7 @@ paths:
       tags:
       - reserve
       summary: Reserve funds on the user wallet
-      operationId: reserveWalletFunds
+      operationId: reserveFunds
       parameters:
       - name: user_id
         in: path
@@ -278,16 +277,24 @@ components:
   schemas:
     Error:
       required:
+      - code
+      - details
       - message
       type: object
       properties:
+        code:
+          type: string
         message:
           type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string
     Wallet:
       required:
       - balance
       - id
-      - reserved_balance
+      - reserved
       - user_id
       type: object
       properties:
@@ -295,22 +302,16 @@ components:
           type: string
           format: uuid
           x-go-name: ID
-          x-go-type: google_uuid.UUID
-          x-go-type-import:
-            name: google_uuid
-            path: github.com/google/uuid
+          x-go-type: string
         user_id:
           type: string
           format: uuid
           x-go-name: UserID
-          x-go-type: google_uuid.UUID
-          x-go-type-import:
-            name: google_uuid
-            path: github.com/google/uuid
+          x-go-type: string
         balance:
           type: string
           example: "49.54"
-        reserved_balance:
+        reserved:
           type: string
           example: "11.79"
     TransactionOperation:
@@ -381,9 +382,11 @@ components:
         amount:
           type: string
           example: "35.47"
+          x-oapi-codegen-extra-tags:
+            validate: required
     ReserveFundsRequest:
       required:
-      - cost
+      - amount
       - order_id
       - service_id
       type: object
@@ -396,6 +399,8 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
+          x-oapi-codegen-extra-tags:
+            validate: required,uuid4
         order_id:
           type: string
           format: uuid
@@ -404,12 +409,16 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
-        cost:
+          x-oapi-codegen-extra-tags:
+            validate: required,uuid4
+        amount:
           type: string
           example: "75.48"
+          x-oapi-codegen-extra-tags:
+            validate: required
     DeclareRevenueRequest:
       required:
-      - cost
+      - amount
       - order_id
       - service_id
       type: object
@@ -422,6 +431,8 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
+          x-oapi-codegen-extra-tags:
+            validate: required,uuid4
         order_id:
           type: string
           format: uuid
@@ -430,9 +441,13 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
-        cost:
+          x-oapi-codegen-extra-tags:
+            validate: required,uuid4
+        amount:
           type: string
           example: "75.48"
+          x-oapi-codegen-extra-tags:
+            validate: required
     RevenueReportResponse:
       required:
       - report_url
