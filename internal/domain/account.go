@@ -9,6 +9,7 @@ import (
 var (
 	ErrFundsNotCredited = errors.New("error occured during processing funds")
 	ErrAccountNotFound  = errors.New("user account not found")
+	ErrZeroDeposit      = errors.New("amount of funds to deposit must be greater than 0")
 )
 
 type Account struct {

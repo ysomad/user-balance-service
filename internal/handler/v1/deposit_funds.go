@@ -40,7 +40,13 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 	if err != nil {
 		h.log.Error(err.Error())
 
-		if errors.Is(err, domain.ErrInvalidMajorAmount) {
+		switch {
+		case errors.Is(err, domain.ErrInvalidMajorAmount):
+			writeError(w, http.StatusBadRequest, errInvalidRequestBody, map[string]string{
+				"amount": err.Error(),
+			})
+			return
+		case errors.Is(err, domain.ErrZeroDeposit):
 			writeError(w, http.StatusBadRequest, errInvalidRequestBody, map[string]string{
 				"amount": err.Error(),
 			})

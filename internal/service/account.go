@@ -26,6 +26,10 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 		return domain.Account{}, err
 	}
 
+	if depAmount.IsZero() {
+		return domain.Account{}, domain.ErrZeroDeposit
+	}
+
 	t, err := domain.NewDepositTransaction(userID, depAmount)
 	if err != nil {
 		return domain.Account{}, err

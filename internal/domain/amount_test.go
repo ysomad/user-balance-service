@@ -7,7 +7,7 @@ import (
 
 func TestNewAmount(t *testing.T) {
 	type args struct {
-		raw string
+		major string
 	}
 	tests := []struct {
 		name    string
@@ -18,7 +18,7 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "invalid format 1",
 			args: args{
-				raw: ".1",
+				major: ".1",
 			},
 			want:    0,
 			wantErr: true,
@@ -26,7 +26,7 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "invalid format 2",
 			args: args{
-				raw: "0.",
+				major: "0.",
 			},
 			want:    0,
 			wantErr: true,
@@ -34,7 +34,7 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "invalid format 3",
 			args: args{
-				raw: "0",
+				major: "0",
 			},
 			want:    0,
 			wantErr: true,
@@ -42,7 +42,7 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "invalid format 4",
 			args: args{
-				raw: "0.555",
+				major: "0.555",
 			},
 			want:    0,
 			wantErr: true,
@@ -50,7 +50,7 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "invalid format 5",
 			args: args{
-				raw: "0.555",
+				major: "0.555",
 			},
 			want:    0,
 			wantErr: true,
@@ -58,136 +58,145 @@ func TestNewAmount(t *testing.T) {
 		{
 			name: "empty input",
 			args: args{
-				raw: "",
+				major: "",
 			},
 			want:    0,
 			wantErr: true,
 		},
 		{
-			name: "only minor units with one 0",
+			name: "zero",
 			args: args{
-				raw: "0.32",
+				major: "0.0",
+			},
+			want:    Amount(0),
+			wantErr: false,
+		},
+
+		{
+			name: "only small units with one 0",
+			args: args{
+				major: "0.32",
 			},
 			want:    Amount(32),
 			wantErr: false,
 		},
 		{
-			name: "only minor units with two 0",
+			name: "only small units with two 0",
 			args: args{
-				raw: "00.77",
+				major: "00.77",
 			},
 			want:    Amount(77),
 			wantErr: false,
 		},
 		{
-			name: "only major units with one 0",
+			name: "only large units with one 0",
 			args: args{
-				raw: "36.0",
+				major: "36.0",
 			},
 			want:    Amount(3600),
 			wantErr: false,
 		},
 		{
-			name: "only major units with two 0",
+			name: "only large units with two 0",
 			args: args{
-				raw: "36.00",
+				major: "36.00",
 			},
 			want:    Amount(3600),
 			wantErr: false,
 		},
 
 		{
-			name: "1 major unit, 1 minor unit",
+			name: "1 large unit, 1 small unit",
 			args: args{
-				raw: "7.6",
+				major: "7.6",
 			},
 			want:    Amount(706),
 			wantErr: false,
 		},
 		{
-			name: "1 major unit, 1 minor unit with 0",
+			name: "1 large unit, 1 small unit with 0",
 			args: args{
-				raw: "7.06",
+				major: "7.06",
 			},
 			want:    Amount(706),
 			wantErr: false,
 		},
 		{
-			name: "2 major units, 2 minor units",
+			name: "2 large units, 2 small units",
 			args: args{
-				raw: "43.54",
+				major: "43.54",
 			},
 			want:    Amount(4354),
 			wantErr: false,
 		},
 		{
-			name: "3 major units, 1 minor unit",
+			name: "3 large units, 1 small unit",
 			args: args{
-				raw: "519.4",
+				major: "519.4",
 			},
 			want:    Amount(51904),
 			wantErr: false,
 		},
 		{
-			name: "3 major units, 1 minor unit with 0",
+			name: "3 large units, 1 small u with 0",
 			args: args{
-				raw: "519.04",
+				major: "519.04",
 			},
 			want:    Amount(51904),
 			wantErr: false,
 		},
 		{
-			name: "4 major units, 2 minor units",
+			name: "4 large units, 2 small units",
 			args: args{
-				raw: "3454.55",
+				major: "3454.55",
 			},
 			want:    Amount(345455),
 			wantErr: false,
 		},
 		{
-			name: "4 major units, 1 minor unit with 0",
+			name: "4 large units, 1 small unit with 0",
 			args: args{
-				raw: "3454.06",
+				major: "3454.06",
 			},
 			want:    Amount(345406),
 			wantErr: false,
 		},
 		{
-			name: "5 major units, 2 minor units",
+			name: "5 large units, 2 small units",
 			args: args{
-				raw: "55676.77",
+				major: "55676.77",
 			},
 			want:    Amount(5567677),
 			wantErr: false,
 		},
 		{
-			name: "6 major units, 1 minor unit",
+			name: "6 large units, 1 small unit",
 			args: args{
-				raw: "762234.1",
+				major: "762234.1",
 			},
 			want:    Amount(76223401),
 			wantErr: false,
 		},
 		{
-			name: "6 major units, 1 minor unit with 0",
+			name: "6 large units, 1 small unit with 0",
 			args: args{
-				raw: "762234.01",
+				major: "762234.01",
 			},
 			want:    Amount(76223401),
 			wantErr: false,
 		},
 		{
-			name: "6 major units, 2 minor units",
+			name: "6 large units, 2 small units",
 			args: args{
-				raw: "762234.11",
+				major: "762234.11",
 			},
 			want:    Amount(76223411),
 			wantErr: false,
 		},
 		{
-			name: "7 major units, 2 minor units",
+			name: "7 large units, 2 small units",
 			args: args{
-				raw: "9653321.17",
+				major: "9653321.17",
 			},
 			want:    Amount(965332117),
 			wantErr: false,
@@ -196,7 +205,7 @@ func TestNewAmount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewAmount(tt.args.raw)
+			got, err := NewAmount(tt.args.major)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewAmount() error = %v, wantErr %v", err, tt.wantErr)
 				return
