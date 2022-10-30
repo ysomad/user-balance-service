@@ -8,8 +8,6 @@ import (
 	"github.com/ysomad/avito-internship-task/internal/atomic"
 )
 
-var _ atomic.Runnner = &transactor{}
-
 type transactor struct {
 	pool *pgxpool.Pool
 }

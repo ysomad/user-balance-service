@@ -1,8 +1,10 @@
 package dto
 
+import "github.com/google/uuid"
+
 type ReserveFundsArgs struct {
-	UserID    string
-	ServiceID string
-	OrderID   string
+	UserID    uuid.UUID
+	ServiceID uuid.UUID
+	OrderID   uuid.UUID
 	Amount    string
 }

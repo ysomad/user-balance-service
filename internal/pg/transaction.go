@@ -11,14 +11,12 @@ import (
 	"github.com/ysomad/avito-internship-task/pgclient"
 )
 
-var _ atomic.Querier = &transactionRepo{}
-
 type transactionRepo struct {
 	*pgclient.Client
 	table string
 }
 
-func (r *transactionRepo) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+func (r *transactionRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
 	return atomic.Query(ctx, r.Pool, sql, args...)
 }
 
@@ -37,7 +35,7 @@ func (r *transactionRepo) Create(ctx context.Context, args dto.CreateTransaction
 		return nil, err
 	}
 
-	rows, err := r.Query(ctx, sql, sqlArgs...)
+	rows, err := r.query(ctx, sql, sqlArgs...)
 	if err != nil {
 		return nil, err
 	}

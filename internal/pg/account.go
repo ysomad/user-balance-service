@@ -13,23 +13,22 @@ import (
 	"github.com/ysomad/avito-internship-task/pgclient"
 )
 
-var _ atomic.Querier = &accountRepo{}
-
 type accountRepo struct {
 	*pgclient.Client
+	table string
 }
 
 func NewAccountRepo(c *pgclient.Client) *accountRepo {
-	return &accountRepo{c}
+	return &accountRepo{c, "account"}
 }
 
-func (r *accountRepo) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+func (r *accountRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
 	return atomic.Query(ctx, r.Pool, sql, args...)
 }
 
-func (r *accountRepo) UpsertAccountBalance(ctx context.Context, t domain.DepositTransaction) (domain.Account, error) {
+func (r *accountRepo) Upsert(ctx context.Context, t domain.DepositTransaction) (domain.Account, error) {
 	sql, args, err := r.Builder.
-		Insert("account as a").
+		Insert(r.table+" as a").
 		Columns("user_id, balance").
 		Values(t.UserID(), t.Amount()).
 		Suffix("ON CONFLICT (user_id) DO UPDATE").
@@ -41,7 +40,7 @@ func (r *accountRepo) UpsertAccountBalance(ctx context.Context, t domain.Deposit
 		return domain.Account{}, err
 	}
 
-	rows, err := r.Query(ctx, sql, args...)
+	rows, err := r.query(ctx, sql, args...)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -54,19 +53,38 @@ func (r *accountRepo) UpsertAccountBalance(ctx context.Context, t domain.Deposit
 	return a, nil
 }
 
-func (r *accountRepo) WithdrawFromUserAccount(ctx context.Context, userID uuid.UUID, a domain.Amount) (domain.Account, error) {
-	// sql, args, err := db.Builder.
-	// 	Update("account").
-	// 	Set("balance", a.UInt64()).
-	// 	ToSql()
-	// if err != nil {
-	// 	return domain.Account{}, err
-	// }
+func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
+	sql, args, err := r.Builder.
+		Update(r.table).
+		Set("balance", sq.Expr("balance - ?", amount.UInt64())).
+		Where(sq.And{
+			sq.Eq{"user_id": userID},
+			sq.GtOrEq{"balance": amount.UInt64()},
+		}).
+		Suffix("RETURNING id, user_id, balance").
+		ToSql()
+	if err != nil {
+		return domain.Account{}, err
+	}
 
-	return domain.Account{}, nil
+	rows, err := r.query(ctx, sql, args...)
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.Account])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Account{}, domain.ErrNotEnoughFunds
+		}
+
+		return domain.Account{}, err
+	}
+
+	return a, nil
 }
 
-func (r *accountRepo) FindUserAccount(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
+func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
 	/*
 		select a.id, a.user_id, a.balance, SUM(r.amount)
 		from account a, account_reserve r
@@ -88,7 +106,7 @@ func (r *accountRepo) FindUserAccount(ctx context.Context, userID uuid.UUID) (do
 		return domain.AccountAggregate{}, err
 	}
 
-	rows, err := r.Query(ctx, sql, args...)
+	rows, err := r.query(ctx, sql, args...)
 	if err != nil {
 		return domain.AccountAggregate{}, err
 	}

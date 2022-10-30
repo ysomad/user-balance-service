@@ -47,4 +47,4 @@ func (a Amount) String() string {
 func (a Amount) UInt64() uint64    { return uint64(a) }
 func (a Amount) LargeUnit() uint64 { return uint64(a) / 100 }
 func (a Amount) SmallUnit() uint64 { return uint64(a) % 100 }
-func (a Amount) IsZero() bool      { return a == 0 }
+func (a Amount) IsZero() bool      { return uint64(a) == 0 }

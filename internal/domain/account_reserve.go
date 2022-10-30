@@ -1,6 +1,9 @@
 package domain
 
+import "github.com/google/uuid"
+
 type AccountReserve struct {
-	AccountID string
+	ID        uuid.UUID
+	AccountID uuid.UUID
 	Balance   Amount
 }

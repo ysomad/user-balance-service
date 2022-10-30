@@ -1,4 +1,3 @@
-// atomic package is set of pgx
 package atomic
 
 import (
@@ -7,22 +6,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
-
-// DB must be implemented by repository to be able to use atomic operations
-// of all repository methods by passing tx through the context.
-//
-// Implementation example:
-//
-//	func (s *storage) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
-//			return atomic.Exec(ctx, s.Pool, sql, args...)
-//	}
-//
-// Or it's possible only implement needed interfaces, for example Querier if other methods not needed.
-type DB interface {
-	Querier
-	QueryRower
-	Executor
-}
 
 type Querier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)

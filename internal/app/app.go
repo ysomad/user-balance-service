@@ -43,10 +43,11 @@ func Run(conf *config.Config) {
 	transactor := pg.NewTransactor(pgClient.Pool)
 
 	// services
+	accountRepo := pg.NewAccountRepo(pgClient)
+	reserveAccountRepo := pg.NewReserveAccountRepo(pgClient)
 	transactionRepo := pg.NewTransactionRepo(pgClient)
 
-	accountRepo := pg.NewAccountRepo(pgClient)
-	accountService := service.NewAccount(accountRepo, transactionRepo)
+	accountService := service.NewAccount(accountRepo, reserveAccountRepo, transactionRepo)
 
 	// init handlers
 	mux := chi.NewMux()

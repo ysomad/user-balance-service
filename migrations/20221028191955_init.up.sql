@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS account (
     balance bigint DEFAULT 0 NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS account_reserve (
+CREATE TABLE IF NOT EXISTS reserve_account (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid () NOT NULL,
     account_id uuid UNIQUE NOT NULL REFERENCES account (id),
     balance bigint DEFAULT 0 NOT NULL
 );

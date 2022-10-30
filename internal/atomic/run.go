@@ -7,10 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type Runnner interface {
-	RunAtomic(ctx context.Context, txFunc func(ctx context.Context) error) error
-}
-
 type StarterWithOpts interface {
 	BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
 }
@@ -19,14 +15,6 @@ type Starter interface {
 	Begin(context.Context) (pgx.Tx, error)
 }
 
-// Run runs txFunx within shared transaction via context.
-// Must be wrapped by storage implementation of Atomic interface.
-//
-// Implementation example:
-//
-//	func (s *storage) RunAtomic(ctx context.Context, txFunc func(ctx context.Context) error) error {
-//			return atomic.Run(ctx, s.Pool, txFunc)
-//		}
 func Run(ctx context.Context, db Starter, txFunc func(ctx context.Context) error) error {
 	tx, err := db.Begin(ctx)
 	if err != nil {

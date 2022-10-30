@@ -397,6 +397,11 @@ func TestAmount_IsZero(t *testing.T) {
 			a:    Amount(124123),
 			want: false,
 		},
+		{
+			name: "false",
+			a:    Amount(111),
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

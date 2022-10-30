@@ -4,19 +4,22 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
 type account struct {
-	accountRepo     accountRepository
-	transactionRepo transactionRepository
+	accountRepo        accountRepo
+	reserveAccountRepo reserveAccountRepo
+	transactionRepo    transactionRepo
 }
 
-func NewAccount(ar accountRepository, tr transactionRepository) *account {
+func NewAccount(ar accountRepo, arr reserveAccountRepo, tr transactionRepo) *account {
 	return &account{
-		accountRepo:     ar,
-		transactionRepo: tr,
+		accountRepo:        ar,
+		reserveAccountRepo: arr,
+		transactionRepo:    tr,
 	}
 }
 
@@ -35,7 +38,7 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 		return domain.Account{}, err
 	}
 
-	acc, err := a.accountRepo.UpsertAccountBalance(ctx, t)
+	acc, err := a.accountRepo.Upsert(ctx, t)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -53,12 +56,36 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 	return acc, nil
 }
 
-func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
-	panic("implement me")
-	return a.accountRepo.FindUserAccount(ctx, userID)
+// ReserveFunds withdraws funds from user account and adds it to reserve account.
+func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (domain.AccountAggregate, error) {
+	amount, err := domain.NewAmount(args.Amount)
+	if err != nil {
+		return domain.AccountAggregate{}, err
+	}
+
+	if amount.IsZero() {
+		return domain.AccountAggregate{}, domain.ErrZeroReserveAmount
+	}
+
+	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, amount)
+	if err != nil {
+		return domain.AccountAggregate{}, err
+	}
+
+	accReserve, err := a.reserveAccountRepo.Upsert(ctx, acc.ID, amount)
+	if err != nil {
+		return domain.AccountAggregate{}, err
+	}
+
+	return domain.AccountAggregate{
+		ID:       acc.ID,
+		UserID:   acc.UserID,
+		Balance:  acc.Balance,
+		Reserved: accReserve.Balance,
+	}, nil
 }
 
-func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (domain.AccountAggregate, error) {
+func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
 	panic("implement me")
-	return domain.AccountAggregate{}, nil
+	return a.accountRepo.FindByUserID(ctx, userID)
 }

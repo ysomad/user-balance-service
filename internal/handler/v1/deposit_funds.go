@@ -30,11 +30,6 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 			return err
 		}
 
-		a, err = h.account.DepositFunds(txCtx, userID, "0.0")
-		if err != nil {
-			return err
-		}
-
 		return nil
 	})
 	if err != nil {
@@ -42,14 +37,10 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 		switch {
 		case errors.Is(err, domain.ErrInvalidMajorAmount):
-			writeError(w, http.StatusBadRequest, errInvalidRequestBody, map[string]string{
-				"amount": err.Error(),
-			})
+			writeError(w, http.StatusBadRequest, err, nil)
 			return
 		case errors.Is(err, domain.ErrZeroDeposit):
-			writeError(w, http.StatusBadRequest, errInvalidRequestBody, map[string]string{
-				"amount": err.Error(),
-			})
+			writeError(w, http.StatusBadRequest, err, nil)
 			return
 		}
 
