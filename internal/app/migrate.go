@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ysomad/avito-internship-task/migrate"
+	"github.com/ysomad/avito-internship-task/internal/pkg/migrate"
 )
 
 func init() {

@@ -8,16 +8,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/ysomad/avito-internship-task/httpserver"
+
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/config"
 	v1 "github.com/ysomad/avito-internship-task/internal/handler/v1"
-	"github.com/ysomad/avito-internship-task/internal/pg"
+	"github.com/ysomad/avito-internship-task/internal/postgres"
 	"github.com/ysomad/avito-internship-task/internal/service"
-	"github.com/ysomad/avito-internship-task/validate"
-
 	"github.com/ysomad/avito-internship-task/logger"
-	"github.com/ysomad/avito-internship-task/pgclient"
+
+	"github.com/ysomad/avito-internship-task/internal/pkg/httpserver"
+	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
+	"github.com/ysomad/avito-internship-task/internal/pkg/validate"
 )
 
 func Run(conf *config.Config) {
@@ -40,12 +41,12 @@ func Run(conf *config.Config) {
 		log.Fatal(err.Error())
 	}
 
-	transactor := pg.NewTransactor(pgClient.Pool)
+	transactor := postgres.NewTransactor(pgClient.Pool)
 
 	// services
-	accountRepo := pg.NewAccountRepo(pgClient)
-	reserveAccountRepo := pg.NewReserveAccountRepo(pgClient)
-	transactionRepo := pg.NewTransactionRepo(pgClient)
+	accountRepo := postgres.NewAccountRepo(pgClient)
+	reserveAccountRepo := postgres.NewReserveAccountRepo(pgClient)
+	transactionRepo := postgres.NewTransactionRepo(pgClient)
 
 	accountService := service.NewAccount(accountRepo, reserveAccountRepo, transactionRepo)
 

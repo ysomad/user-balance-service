@@ -1,14 +1,15 @@
-package pg
+package postgres
 
 import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/ysomad/avito-internship-task/internal/atomic"
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
-	"github.com/ysomad/avito-internship-task/pgclient"
+
+	"github.com/ysomad/avito-internship-task/internal/pkg/atomic"
+	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
 type transactionRepo struct {

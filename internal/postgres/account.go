@@ -1,4 +1,4 @@
-package pg
+package postgres
 
 import (
 	"context"
@@ -8,9 +8,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/ysomad/avito-internship-task/internal/atomic"
 	"github.com/ysomad/avito-internship-task/internal/domain"
-	"github.com/ysomad/avito-internship-task/pgclient"
+
+	"github.com/ysomad/avito-internship-task/internal/pkg/atomic"
+	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
 type accountRepo struct {
