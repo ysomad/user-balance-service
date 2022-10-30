@@ -14,9 +14,9 @@ import (
 	v1 "github.com/ysomad/avito-internship-task/internal/handler/v1"
 	"github.com/ysomad/avito-internship-task/internal/postgres"
 	"github.com/ysomad/avito-internship-task/internal/service"
-	"github.com/ysomad/avito-internship-task/logger"
 
 	"github.com/ysomad/avito-internship-task/internal/pkg/httpserver"
+	"github.com/ysomad/avito-internship-task/internal/pkg/logger"
 	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 	"github.com/ysomad/avito-internship-task/internal/pkg/validate"
 )
