@@ -63,9 +63,8 @@ type DepositFundsResponse struct {
 
 // Error defines model for Error.
 type Error struct {
-	Details map[string]string `json:"details"`
-	Message string            `json:"message"`
-	Status  string            `json:"status"`
+	Message string `json:"message"`
+	Status  string `json:"status"`
 }
 
 // ReserveFundsRequest defines model for ReserveFundsRequest.

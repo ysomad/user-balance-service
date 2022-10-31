@@ -277,7 +277,6 @@ components:
   schemas:
     Error:
       required:
-      - details
       - message
       - status
       type: object
@@ -286,10 +285,6 @@ components:
           type: string
         message:
           type: string
-        details:
-          type: object
-          additionalProperties:
-            type: string
     AccountAggregate:
       required:
       - balance
