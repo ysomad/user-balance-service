@@ -8,6 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5"
+	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/config"
@@ -41,14 +43,17 @@ func Run(conf *config.Config) {
 		log.Fatal(err.Error())
 	}
 
-	transactor := postgres.NewTransactor(pgClient.Pool)
+	transactor, err := pgxatomic.NewRunner(pgClient.Pool, pgx.TxOptions{})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	// services
 	accountRepo := postgres.NewAccountRepo(pgClient)
-	reserveAccountRepo := postgres.NewReserveAccountRepo(pgClient)
-	transactionRepo := postgres.NewTransactionRepo(pgClient)
+	revenueReportRepo := postgres.NewRevenueReportRepo(pgClient)
+	reservationRepo := postgres.NewReservationRepo(log, pgClient)
 
-	accountService := service.NewAccount(accountRepo, reserveAccountRepo, transactionRepo)
+	accountService := service.NewAccount(accountRepo, revenueReportRepo, reservationRepo)
 
 	// init handlers
 	mux := chi.NewMux()

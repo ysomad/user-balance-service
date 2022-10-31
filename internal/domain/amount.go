@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrInvalidMajorAmount = errors.New("invalid major amount format, must be '13.37'")
+	ErrZeroAmount         = errors.New("amount must be greated than 0")
 )
 
 type Amount uint64

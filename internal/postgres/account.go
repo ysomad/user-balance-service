@@ -7,10 +7,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal/domain"
 
-	"github.com/ysomad/avito-internship-task/internal/pkg/atomic"
 	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
@@ -24,10 +24,10 @@ func NewAccountRepo(c *pgclient.Client) *accountRepo {
 }
 
 func (r *accountRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	return atomic.Query(ctx, r.Pool, sql, args...)
+	return pgxatomic.Query(ctx, r.Pool, sql, args...)
 }
 
-func (r *accountRepo) Upsert(ctx context.Context, t domain.DepositTransaction) (domain.Account, error) {
+func (r *accountRepo) UpdateOrCreate(ctx context.Context, t domain.DepositTransaction) (domain.Account, error) {
 	sql, args, err := r.Builder.
 		Insert(r.table+" as a").
 		Columns("user_id, balance").
@@ -85,7 +85,7 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 	return a, nil
 }
 
-func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
+func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
 	/*
 		select a.id, a.user_id, a.balance, SUM(r.amount)
 		from account a, account_reserve r
@@ -104,21 +104,21 @@ func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domai
 		Having("r.is_debited = false").
 		ToSql()
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
 	rows, err := r.query(ctx, sql, args...)
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
-	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.AccountAggregate])
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.Account])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.AccountAggregate{}, domain.ErrAccountNotFound
+			return domain.Account{}, domain.ErrAccountNotFound
 		}
 
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
 	return a, nil

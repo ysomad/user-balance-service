@@ -87,7 +87,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Account'
+                $ref: '#/components/schemas/DepositFundsResponse'
         "400":
           description: Bad Request
           content:
@@ -145,7 +145,7 @@ paths:
     post:
       tags:
       - reserve
-      summary: Reserve funds on the user account
+      summary: Reserve funds from user account
       operationId: reserveFunds
       parameters:
       - name: user_id
@@ -169,7 +169,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountAggregate'
+                $ref: '#/components/schemas/ReserveFundsResponse'
         "400":
           description: Bad Request
           content:
@@ -213,11 +213,11 @@ paths:
         $ref: '#/components/requestBodies/DeclareRevenueRequestBody'
       responses:
         "200":
-          description: All reserved money were added to the report
+          description: Added to revenue report
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountAggregate'
+                $ref: '#/components/schemas/DeclareRevenueResponse'
         "400":
           description: Bad Request
           content:
@@ -440,6 +440,57 @@ components:
         amount:
           type: string
           example: "75.48"
+    DepositFundsResponse:
+      required:
+      - balance
+      type: object
+      properties:
+        balance:
+          type: string
+          example: "49.54"
+    ReserveFundsResponse:
+      required:
+      - account_balance
+      - is_declared
+      - order_id
+      - reserved_amount
+      - reserved_at
+      - service_id
+      type: object
+      properties:
+        reserved_amount:
+          type: string
+          example: "75.48"
+        account_balance:
+          type: string
+          example: "75.48"
+        is_declared:
+          type: boolean
+          x-go-name: Declared
+        reserved_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
+        declared_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
+        service_id:
+          type: string
+          format: uuid
+          x-go-name: ServiceID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        order_id:
+          type: string
+          format: uuid
+          x-go-name: OrderID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
     DeclareRevenueRequest:
       required:
       - amount
@@ -466,6 +517,50 @@ components:
         amount:
           type: string
           example: "75.48"
+    DeclareRevenueResponse:
+      required:
+      - account_id
+      - declared_amount
+      - is_declared
+      - order_id
+      - revenue_report_id
+      - service_id
+      type: object
+      properties:
+        service_id:
+          type: string
+          format: uuid
+          x-go-name: ServiceID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        order_id:
+          type: string
+          format: uuid
+          x-go-name: OrderID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        declared_amount:
+          type: string
+          example: "75.48"
+        is_declared:
+          type: boolean
+          x-go-name: Declared
+        declared_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
+        revenue_report_id:
+          type: string
+          format: uuid
+          x-go-name: RevenueReportID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
     RevenueReportResponse:
       required:
       - report_url

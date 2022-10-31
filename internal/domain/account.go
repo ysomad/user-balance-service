@@ -19,10 +19,3 @@ type Account struct {
 	UserID  uuid.UUID
 	Balance Amount
 }
-
-type AccountAggregate struct {
-	ID       uuid.UUID
-	UserID   uuid.UUID
-	Balance  Amount
-	Reserved Amount
-}

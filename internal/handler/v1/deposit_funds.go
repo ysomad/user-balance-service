@@ -24,7 +24,7 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 	var a domain.Account
 
-	err = h.tx.RunAtomic(r.Context(), func(txCtx context.Context) error {
+	err = h.tx.Run(r.Context(), func(txCtx context.Context) error {
 		a, err = h.account.DepositFunds(txCtx, userID, req.Amount)
 		if err != nil {
 			return err
@@ -48,9 +48,7 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	writeOK(w, Account{
-		ID:      a.ID,
-		UserID:  a.UserID,
+	writeOK(w, DepositFundsResponse{
 		Balance: a.Balance.String(),
 	})
 }

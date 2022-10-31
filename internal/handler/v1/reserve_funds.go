@@ -23,10 +23,10 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	var a domain.AccountAggregate
+	var res *dto.AccountWithReservation
 
-	err = h.tx.RunAtomic(r.Context(), func(txCtx context.Context) error {
-		a, err = h.account.ReserveFunds(txCtx, dto.ReserveFundsArgs{
+	err = h.tx.Run(r.Context(), func(txCtx context.Context) error {
+		res, err = h.account.ReserveFunds(txCtx, dto.ReserveFundsArgs{
 			UserID:    userID,
 			ServiceID: req.ServiceID,
 			OrderID:   req.OrderID,
@@ -43,7 +43,7 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 		switch {
 		case errors.Is(err, domain.ErrNotEnoughFunds):
-			writeError(w, http.StatusConflict, err, nil)
+			writeError(w, http.StatusBadRequest, err, nil)
 			return
 		case errors.Is(err, domain.ErrZeroReserveAmount):
 			writeError(w, http.StatusBadRequest, err, nil)
@@ -54,10 +54,13 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	writeOK(w, AccountAggregate{
-		ID:       a.ID,
-		UserID:   a.UserID,
-		Balance:  a.Balance.String(),
-		Reserved: a.Reserved.String(),
+	writeOK(w, &ReserveFundsResponse{
+		AccountBalance: res.Account.Balance.String(),
+		ReservedAmount: res.Reservation.Amount.String(),
+		Declared:       res.Reservation.Declared,
+		DeclaredAt:     res.Reservation.DeclaredAt,
+		ReservedAt:     res.Reservation.CreatedAt,
+		ServiceID:      res.Reservation.ServiceID,
+		OrderID:        res.Reservation.OrderID,
 	})
 }

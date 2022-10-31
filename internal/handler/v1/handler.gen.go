@@ -6,6 +6,7 @@ package v1
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/go-chi/chi/v5"
@@ -24,13 +25,6 @@ const (
 	WITHDRAW TransactionOperation = "WITHDRAW"
 )
 
-// Account defines model for Account.
-type Account struct {
-	Balance string           `json:"balance"`
-	ID      google_uuid.UUID `json:"id"`
-	UserID  google_uuid.UUID `json:"user_id"`
-}
-
 // AccountAggregate defines model for AccountAggregate.
 type AccountAggregate struct {
 	Balance  string           `json:"balance"`
@@ -46,9 +40,24 @@ type DeclareRevenueRequest struct {
 	ServiceID google_uuid.UUID `json:"service_id"`
 }
 
+// DeclareRevenueResponse defines model for DeclareRevenueResponse.
+type DeclareRevenueResponse struct {
+	DeclaredAmount  string           `json:"declared_amount"`
+	DeclaredAt      *time.Time       `json:"declared_at,omitempty"`
+	Declared        bool             `json:"is_declared"`
+	OrderID         google_uuid.UUID `json:"order_id"`
+	RevenueReportID google_uuid.UUID `json:"revenue_report_id"`
+	ServiceID       google_uuid.UUID `json:"service_id"`
+}
+
 // DepositFundsRequest defines model for DepositFundsRequest.
 type DepositFundsRequest struct {
 	Amount string `json:"amount"`
+}
+
+// DepositFundsResponse defines model for DepositFundsResponse.
+type DepositFundsResponse struct {
+	Balance string `json:"balance"`
 }
 
 // Error defines model for Error.
@@ -63,6 +72,17 @@ type ReserveFundsRequest struct {
 	Amount    string           `json:"amount"`
 	OrderID   google_uuid.UUID `json:"order_id"`
 	ServiceID google_uuid.UUID `json:"service_id"`
+}
+
+// ReserveFundsResponse defines model for ReserveFundsResponse.
+type ReserveFundsResponse struct {
+	AccountBalance string           `json:"account_balance"`
+	DeclaredAt     *time.Time       `json:"declared_at,omitempty"`
+	Declared       bool             `json:"is_declared"`
+	OrderID        google_uuid.UUID `json:"order_id"`
+	ReservedAmount string           `json:"reserved_amount"`
+	ReservedAt     time.Time        `json:"reserved_at"`
+	ServiceID      google_uuid.UUID `json:"service_id"`
 }
 
 // RevenueReportResponse defines model for RevenueReportResponse.
@@ -144,7 +164,7 @@ type ServerInterface interface {
 	// Get revenue report
 	// (GET /reports/{month})
 	GetRevenueReport(w http.ResponseWriter, r *http.Request, month string)
-	// Reserve funds on the user account
+	// Reserve funds from user account
 	// (POST /reserve/{user_id})
 	ReserveFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Declare revenue

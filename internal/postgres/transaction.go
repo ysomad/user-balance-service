@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 
-	"github.com/ysomad/avito-internship-task/internal/pkg/atomic"
 	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
@@ -18,7 +18,7 @@ type transactionRepo struct {
 }
 
 func (r *transactionRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	return atomic.Query(ctx, r.Pool, sql, args...)
+	return pgxatomic.Query(ctx, r.Pool, sql, args...)
 }
 
 func NewTransactionRepo(c *pgclient.Client) *transactionRepo {

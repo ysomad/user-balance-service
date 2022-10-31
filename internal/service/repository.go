@@ -10,15 +10,16 @@ import (
 )
 
 type accountRepo interface {
-	Upsert(context.Context, domain.DepositTransaction) (domain.Account, error)
-	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
+	UpdateOrCreate(context.Context, domain.DepositTransaction) (domain.Account, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
 	Withdraw(ctx context.Context, userID uuid.UUID, a domain.Amount) (domain.Account, error)
 }
 
-type reserveAccountRepo interface {
-	Upsert(ctx context.Context, accountID uuid.UUID, a domain.Amount) (domain.AccountReserve, error)
+type reservationRepo interface {
+	Create(context.Context, dto.CreateReservationArgs) (*domain.Reservation, error)
+	AddToRevenueReport(context.Context, dto.AddToRevenueReportArgs) (*domain.Reservation, error)
 }
 
-type transactionRepo interface {
-	Create(context.Context, dto.CreateTransactionArgs) (*domain.Transaction, error)
+type revenueReportRepo interface {
+	GetOrCreate(ctx context.Context, userID uuid.UUID) (domain.RevenueReport, error)
 }

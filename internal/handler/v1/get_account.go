@@ -9,7 +9,7 @@ import (
 )
 
 func (h *handler) GetAccount(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
-	a, err := h.account.GetByUserID(r.Context(), userID)
+	_, err := h.account.GetByUserID(r.Context(), userID)
 	if err != nil {
 		h.log.Error(err.Error())
 
@@ -22,10 +22,5 @@ func (h *handler) GetAccount(w http.ResponseWriter, r *http.Request, userID uuid
 		return
 	}
 
-	writeOK(w, AccountAggregate{
-		ID:       a.ID,
-		UserID:   a.UserID,
-		Balance:  a.Balance.String(),
-		Reserved: a.Reserved.String(),
-	})
+	writeOK(w, struct{}{})
 }

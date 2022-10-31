@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/google/uuid"
+
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
@@ -18,13 +19,17 @@ type validate interface {
 }
 
 type atomicRunner interface {
-	RunAtomic(context.Context, func(context.Context) error) error
+	Run(context.Context, func(context.Context) error) error
 }
 
 type accountService interface {
 	DepositFunds(ctx context.Context, userID uuid.UUID, amount string) (domain.Account, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
-	ReserveFunds(context.Context, dto.ReserveFundsArgs) (domain.AccountAggregate, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
+	ReserveFunds(context.Context, dto.ReserveFundsArgs) (*dto.AccountWithReservation, error)
+	DeclareRevenue(context.Context, dto.DeclareRevenueArgs) (*domain.Reservation, error)
+}
+
+type revenueReportService interface {
 }
 
 type handler struct {

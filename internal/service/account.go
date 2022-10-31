@@ -10,16 +10,16 @@ import (
 )
 
 type account struct {
-	accountRepo        accountRepo
-	reserveAccountRepo reserveAccountRepo
-	transactionRepo    transactionRepo
+	accountRepo       accountRepo
+	revenueReportRepo revenueReportRepo
+	reservationRepo   reservationRepo
 }
 
-func NewAccount(ar accountRepo, arr reserveAccountRepo, tr transactionRepo) *account {
+func NewAccount(ar accountRepo, rrr revenueReportRepo, rr reservationRepo) *account {
 	return &account{
-		accountRepo:        ar,
-		reserveAccountRepo: arr,
-		transactionRepo:    tr,
+		accountRepo:       ar,
+		revenueReportRepo: rrr,
+		reservationRepo:   rr,
 	}
 }
 
@@ -38,54 +38,72 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 		return domain.Account{}, err
 	}
 
-	acc, err := a.accountRepo.Upsert(ctx, t)
+	acc, err := a.accountRepo.UpdateOrCreate(ctx, t)
 	if err != nil {
 		return domain.Account{}, err
 	}
-
-	// _, err = a.transactionRepo.CreateTransaction(txCtx, dto.CreateTransactionArgs{
-	// 	UserID:    t.UserID(),
-	// 	Comment:   t.Comment(),
-	// 	Operation: t.Operation().String(),
-	// 	Amount:    t.Amount().UInt64(),
-	// })
-	// if err != nil {
-	// 	return err
-	// }
 
 	return acc, nil
 }
 
 // ReserveFunds withdraws funds from user account and adds it to reserve account.
-func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (domain.AccountAggregate, error) {
+func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (*dto.AccountWithReservation, error) {
 	amount, err := domain.NewAmount(args.Amount)
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return nil, err
 	}
 
 	if amount.IsZero() {
-		return domain.AccountAggregate{}, domain.ErrZeroReserveAmount
+		return nil, domain.ErrZeroReserveAmount
 	}
 
 	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, amount)
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return nil, err
 	}
 
-	accReserve, err := a.reserveAccountRepo.Upsert(ctx, acc.ID, amount)
+	res, err := a.reservationRepo.Create(ctx, dto.CreateReservationArgs{
+		AccountID: acc.ID,
+		ServiceID: args.ServiceID,
+		OrderID:   args.OrderID,
+		Amount:    amount,
+	})
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return nil, err
 	}
 
-	return domain.AccountAggregate{
-		ID:       acc.ID,
-		UserID:   acc.UserID,
-		Balance:  acc.Balance,
-		Reserved: accReserve.Balance,
+	return &dto.AccountWithReservation{
+		Account:     acc,
+		Reservation: res,
 	}, nil
 }
 
-func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
+func (a *account) DeclareRevenue(ctx context.Context, args dto.DeclareRevenueArgs) (*domain.Reservation, error) {
+	amount, err := domain.NewAmount(args.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	report, err := a.revenueReportRepo.GetOrCreate(ctx, args.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.reservationRepo.AddToRevenueReport(ctx, dto.AddToRevenueReportArgs{
+		UserID:          args.UserID,
+		ServiceID:       args.ServiceID,
+		OrderID:         args.OrderID,
+		Amount:          amount,
+		RevenueReportID: report.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
 	panic("implement me")
 	return a.accountRepo.FindByUserID(ctx, userID)
 }
