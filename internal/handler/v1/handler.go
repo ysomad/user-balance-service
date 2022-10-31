@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"io"
 
 	"github.com/google/uuid"
 
@@ -12,11 +11,6 @@ import (
 )
 
 var _ ServerInterface = &handler{}
-
-type validate interface {
-	Into(r io.Reader, dest any) error
-	Translate(error) map[string]string
-}
 
 type atomicWrapper interface {
 	Wrap(context.Context, func(context.Context) error) error
@@ -30,17 +24,15 @@ type accountService interface {
 }
 
 type handler struct {
-	log      internal.Logger
-	validate validate
-	atomic   atomicWrapper
-	account  accountService
+	log     internal.Logger
+	atomic  atomicWrapper
+	account accountService
 }
 
-func NewHandler(l internal.Logger, v validate, ar atomicWrapper, as accountService) *handler {
+func NewHandler(l internal.Logger, ar atomicWrapper, as accountService) *handler {
 	return &handler{
-		log:      l,
-		validate: v,
-		atomic:   ar,
-		account:  as,
+		log:     l,
+		atomic:  ar,
+		account: as,
 	}
 }

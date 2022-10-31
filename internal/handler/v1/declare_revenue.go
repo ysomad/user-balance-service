@@ -19,7 +19,7 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, errInvalidRequestBody, nil)
+		writeError(w, http.StatusBadRequest, errInvalidRequestBody)
 		return
 	}
 
@@ -44,17 +44,17 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 
 		switch {
 		case errors.Is(err, domain.ErrAccountNotFound):
-			writeError(w, http.StatusBadRequest, domain.ErrAccountNotFound, nil)
+			writeError(w, http.StatusBadRequest, domain.ErrAccountNotFound)
 			return
 		case errors.Is(err, domain.ErrZeroAmount):
-			writeError(w, http.StatusBadRequest, err, nil)
+			writeError(w, http.StatusBadRequest, err)
 			return
 		case errors.Is(err, domain.ErrReservationNotDeclared):
-			writeError(w, http.StatusNotFound, err, nil)
+			writeError(w, http.StatusNotFound, err)
 			return
 		}
 
-		writeError(w, http.StatusInternalServerError, err, nil)
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 

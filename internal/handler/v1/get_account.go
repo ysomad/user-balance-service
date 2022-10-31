@@ -14,11 +14,11 @@ func (h *handler) GetAccount(w http.ResponseWriter, r *http.Request, userID uuid
 		h.log.Error(err.Error())
 
 		if errors.Is(err, domain.ErrAccountNotFound) {
-			writeError(w, http.StatusNotFound, err, nil)
+			writeError(w, http.StatusNotFound, err)
 			return
 		}
 
-		writeError(w, http.StatusInternalServerError, err, nil)
+		writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 

@@ -18,7 +18,7 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, errInvalidRequestBody, nil)
+		writeError(w, http.StatusBadRequest, errInvalidRequestBody)
 		return
 	}
 
@@ -37,14 +37,14 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 		switch {
 		case errors.Is(err, domain.ErrInvalidMajorAmount):
-			writeError(w, http.StatusBadRequest, err, nil)
+			writeError(w, http.StatusBadRequest, err)
 			return
 		case errors.Is(err, domain.ErrZeroDeposit):
-			writeError(w, http.StatusBadRequest, err, nil)
+			writeError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		writeError(w, http.StatusInternalServerError, domain.ErrFundsNotCredited, nil)
+		writeError(w, http.StatusInternalServerError, domain.ErrFundsNotCredited)
 		return
 	}
 

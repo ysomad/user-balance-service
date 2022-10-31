@@ -20,7 +20,6 @@ import (
 	"github.com/ysomad/avito-internship-task/internal/pkg/httpserver"
 	"github.com/ysomad/avito-internship-task/internal/pkg/logger"
 	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
-	"github.com/ysomad/avito-internship-task/internal/pkg/validate"
 )
 
 func Run(conf *config.Config) {
@@ -38,11 +37,6 @@ func Run(conf *config.Config) {
 	}
 	defer pgClient.Close()
 
-	validator, err := validate.New()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	transactor, err := pgxatomic.NewWrapper(pgClient.Pool, pgx.TxOptions{})
 	if err != nil {
 		log.Fatal(err.Error())
@@ -59,7 +53,7 @@ func Run(conf *config.Config) {
 	mux := chi.NewMux()
 	mux.Use(middleware.Logger, middleware.Recoverer)
 
-	handlerV1 := v1.NewHandler(log, validator, transactor, accountService)
+	handlerV1 := v1.NewHandler(log, transactor, accountService)
 	v1.HandlerFromMuxWithBaseURL(handlerV1, mux, "/v1")
 
 	runHTTPServer(mux, log, conf.HTTP.Port)

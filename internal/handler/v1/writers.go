@@ -5,13 +5,12 @@ import (
 	"net/http"
 )
 
-func writeError(w http.ResponseWriter, code int, err error, details map[string]string) {
+func writeError(w http.ResponseWriter, code int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(Error{
 		Status:  http.StatusText(code),
 		Message: err.Error(),
-		Details: details,
 	})
 }
 
