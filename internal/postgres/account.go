@@ -85,40 +85,48 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 	return a, nil
 }
 
-func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
+func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
 	/*
-		select a.id, a.user_id, a.balance, SUM(r.amount)
-		from account a, account_reserve r
-		where a.id = r.account_id and r.is_debited = false
-		group by a.id
+		select
+		    a.id,
+		    a.user_id,
+		    a.balance,
+		    sum(r.amount) as reserved_balance,
+		    count(*) as reservations_amount
+		from account a
+		left join reservation r on a.id = r.account_id
+		where
+		    a.user_id = '6cbbb7f8-e458-46be-969e-fa771e43486e'
+		    and r.is_declared = false
+		group by a.id;
 	*/
 
-	// TODO: IMPLEMENT THE RIGHT WAY!!! (NOT WORKING NOW)
-
 	sql, args, err := r.Builder.
-		Select("a.id, a.user_id, a.balance, COALESCE(SUM(r.amount), 0) as reserved").
+		Select("a.id, a.user_id, a.balance, sum(r.amount), count(*)").
 		From("account a").
-		LeftJoin("account_reserve r ON a.id = r.account_id").
-		Where(sq.Eq{"a.user_id": userID}).
-		GroupBy("a.id, r.amount, r.is_debited").
-		Having("r.is_debited = false").
+		LeftJoin("reservation r ON a.id = r.account_id").
+		Where(sq.And{
+			sq.Eq{"a.user_id": userID},
+			sq.Eq{"r.is_declared": false},
+		}).
+		GroupBy("a.id").
 		ToSql()
 	if err != nil {
-		return domain.Account{}, err
+		return domain.AccountAggregate{}, err
 	}
 
 	rows, err := r.query(ctx, sql, args...)
 	if err != nil {
-		return domain.Account{}, err
+		return domain.AccountAggregate{}, err
 	}
 
-	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.Account])
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.AccountAggregate])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Account{}, domain.ErrAccountNotFound
+			return domain.AccountAggregate{}, domain.ErrAccountNotFound
 		}
 
-		return domain.Account{}, err
+		return domain.AccountAggregate{}, err
 	}
 
 	return a, nil

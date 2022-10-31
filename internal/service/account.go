@@ -103,7 +103,6 @@ func (a *account) DeclareRevenue(ctx context.Context, args dto.DeclareRevenueArg
 	return res, nil
 }
 
-func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
-	panic("implement me")
+func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
 	return a.accountRepo.FindByUserID(ctx, userID)
 }

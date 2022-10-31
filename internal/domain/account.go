@@ -19,3 +19,9 @@ type Account struct {
 	UserID  uuid.UUID
 	Balance Amount
 }
+
+type AccountAggregate struct {
+	Account
+	ReservedAmount   Amount
+	ReservationCount uint32
+}

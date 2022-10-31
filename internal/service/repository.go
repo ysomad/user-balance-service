@@ -11,7 +11,7 @@ import (
 
 type accountRepo interface {
 	UpdateOrCreate(context.Context, domain.DepositTransaction) (domain.Account, error)
-	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
 	Withdraw(ctx context.Context, userID uuid.UUID, a domain.Amount) (domain.Account, error)
 }
 

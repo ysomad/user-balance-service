@@ -27,10 +27,11 @@ const (
 
 // AccountAggregate defines model for AccountAggregate.
 type AccountAggregate struct {
-	Balance  string           `json:"balance"`
-	ID       google_uuid.UUID `json:"id"`
-	Reserved string           `json:"reserved"`
-	UserID   google_uuid.UUID `json:"user_id"`
+	Balance          string           `json:"balance"`
+	ID               google_uuid.UUID `json:"id"`
+	ReservationCount uint32           `json:"reservation_count"`
+	ReservedBalance  string           `json:"reserved_balance"`
+	UserID           google_uuid.UUID `json:"user_id"`
 }
 
 // DeclareRevenueRequest defines model for DeclareRevenueRequest.

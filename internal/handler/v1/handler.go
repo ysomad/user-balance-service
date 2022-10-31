@@ -24,12 +24,9 @@ type atomicWrapper interface {
 
 type accountService interface {
 	DepositFunds(ctx context.Context, userID uuid.UUID, amount string) (domain.Account, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
 	ReserveFunds(context.Context, dto.ReserveFundsArgs) (*dto.AccountWithReservation, error)
 	DeclareRevenue(context.Context, dto.DeclareRevenueArgs) (*domain.Reservation, error)
-}
-
-type revenueReportService interface {
 }
 
 type handler struct {
