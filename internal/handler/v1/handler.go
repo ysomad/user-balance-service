@@ -18,8 +18,8 @@ type validate interface {
 	Translate(error) map[string]string
 }
 
-type atomicRunner interface {
-	Run(context.Context, func(context.Context) error) error
+type atomicWrapper interface {
+	Wrap(context.Context, func(context.Context) error) error
 }
 
 type accountService interface {
@@ -35,15 +35,15 @@ type revenueReportService interface {
 type handler struct {
 	log      internal.Logger
 	validate validate
-	tx       atomicRunner
+	atomic   atomicWrapper
 	account  accountService
 }
 
-func NewHandler(l internal.Logger, v validate, ar atomicRunner, as accountService) *handler {
+func NewHandler(l internal.Logger, v validate, ar atomicWrapper, as accountService) *handler {
 	return &handler{
 		log:      l,
 		validate: v,
-		tx:       ar,
+		atomic:   ar,
 		account:  as,
 	}
 }

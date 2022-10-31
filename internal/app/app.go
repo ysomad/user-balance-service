@@ -43,7 +43,7 @@ func Run(conf *config.Config) {
 		log.Fatal(err.Error())
 	}
 
-	transactor, err := pgxatomic.NewRunner(pgClient.Pool, pgx.TxOptions{})
+	transactor, err := pgxatomic.NewWrapper(pgClient.Pool, pgx.TxOptions{})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

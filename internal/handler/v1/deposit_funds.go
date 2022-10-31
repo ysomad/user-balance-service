@@ -24,7 +24,7 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 	var a domain.Account
 
-	err = h.tx.Run(r.Context(), func(txCtx context.Context) error {
+	err = h.atomic.Wrap(r.Context(), func(txCtx context.Context) error {
 		a, err = h.account.DepositFunds(txCtx, userID, req.Amount)
 		if err != nil {
 			return err
