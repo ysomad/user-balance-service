@@ -58,7 +58,6 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 		AccountBalance: res.Account.Balance.String(),
 		ReservedAmount: res.Reservation.Amount.String(),
 		Declared:       res.Reservation.Declared,
-		DeclaredAt:     res.Reservation.DeclaredAt,
 		ReservedAt:     res.Reservation.CreatedAt,
 		ServiceID:      res.Reservation.ServiceID,
 		OrderID:        res.Reservation.OrderID,

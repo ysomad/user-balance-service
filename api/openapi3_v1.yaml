@@ -444,10 +444,6 @@ components:
           type: string
           format: datetime
           x-go-type: time.Time
-        declared_at:
-          type: string
-          format: datetime
-          x-go-type: time.Time
         service_id:
           type: string
           format: uuid

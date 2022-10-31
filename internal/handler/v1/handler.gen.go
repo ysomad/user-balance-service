@@ -77,7 +77,6 @@ type ReserveFundsRequest struct {
 // ReserveFundsResponse defines model for ReserveFundsResponse.
 type ReserveFundsResponse struct {
 	AccountBalance string           `json:"account_balance"`
-	DeclaredAt     *time.Time       `json:"declared_at,omitempty"`
 	Declared       bool             `json:"is_declared"`
 	OrderID        google_uuid.UUID `json:"order_id"`
 	ReservedAmount string           `json:"reserved_amount"`
