@@ -82,8 +82,6 @@ func (r *reservationRepo) AddToRevenueReport(ctx context.Context, args dto.AddTo
 		return nil, err
 	}
 
-	r.log.Errorf("%s: %v", sql, args)
-
 	rows, err := r.query(ctx, sql, sqlArgs...)
 	if err != nil {
 		return nil, err
