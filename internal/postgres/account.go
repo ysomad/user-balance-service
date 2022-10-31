@@ -86,21 +86,6 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 }
 
 func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
-	/*
-		select
-		    a.id,
-		    a.user_id,
-		    a.balance,
-		    sum(r.amount) as reserved_balance,
-		    count(*) as reservations_amount
-		from account a
-		left join reservation r on a.id = r.account_id
-		where
-		    a.user_id = '6cbbb7f8-e458-46be-969e-fa771e43486e'
-		    and r.is_declared = false
-		group by a.id;
-	*/
-
 	sql, args, err := r.Builder.
 		Select("a.id, a.user_id, a.balance, sum(r.amount), count(*)").
 		From("account a").
