@@ -40,8 +40,21 @@ func (h *handler) GetAccountTransactions(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	// TODO: don't like this very much, find better solution
+	txs := make([]Transaction, len(l.Transactions))
+	for i, d := range l.Transactions {
+		txs[i] = Transaction{
+			ID:         d.ID,
+			AccountID:  d.AccountID,
+			Amount:     d.Amount.String(),
+			Comment:    string(d.Comment),
+			Operation:  TransactionOperation(d.Operation),
+			CommitedAt: d.CommitedAt,
+		}
+	}
+
 	writeOK(w, TransactionList{
-		Transactions:  l.Transactions,
+		Transactions:  txs,
 		NextPageToken: l.NextPageToken,
 	})
 }

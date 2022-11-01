@@ -318,12 +318,13 @@ components:
       - DEPOSIT
     Transaction:
       required:
+      - account_id
       - amount
       - comment
+      - commited_at
       - from
       - id
       - operation
-      - user_id
       type: object
       properties:
         id:
@@ -334,10 +335,10 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
-        user_id:
+        account_id:
           type: string
           format: uuid
-          x-go-name: UserID
+          x-go-name: AccountID
           x-go-type: google_uuid.UUID
           x-go-type-import:
             name: google_uuid
@@ -345,19 +346,15 @@ components:
         comment:
           type: string
           example: deposit from billing
-        from:
-          type: string
-          description: empty means operation was initiated by billing
-          format: uuid
-          x-go-type: google_uuid.UUID
-          x-go-type-import:
-            name: google_uuid
-            path: github.com/google/uuid
         amount:
           type: string
           example: "33.78"
         operation:
           $ref: '#/components/schemas/TransactionOperation'
+        commited_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
     TransactionList:
       required:
       - next_page_token
@@ -368,7 +365,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transaction'
-          x-go-type: any
         next_page_token:
           type: string
           example: U3dhZ2dlciByb2Nrcw==

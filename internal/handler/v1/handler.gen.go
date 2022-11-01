@@ -87,20 +87,18 @@ type SortOrder string
 
 // Transaction defines model for Transaction.
 type Transaction struct {
-	Amount  string `json:"amount"`
-	Comment string `json:"comment"`
-
-	// From empty means operation was initiated by billing
-	From      google_uuid.UUID     `json:"from"`
-	ID        google_uuid.UUID     `json:"id"`
-	Operation TransactionOperation `json:"operation"`
-	UserID    google_uuid.UUID     `json:"user_id"`
+	AccountID  google_uuid.UUID     `json:"account_id"`
+	Amount     string               `json:"amount"`
+	Comment    string               `json:"comment"`
+	CommitedAt time.Time            `json:"commited_at"`
+	ID         google_uuid.UUID     `json:"id"`
+	Operation  TransactionOperation `json:"operation"`
 }
 
 // TransactionList defines model for TransactionList.
 type TransactionList struct {
-	NextPageToken string `json:"next_page_token"`
-	Transactions  any    `json:"transactions"`
+	NextPageToken string        `json:"next_page_token"`
+	Transactions  []Transaction `json:"transactions"`
 }
 
 // TransactionListRequest defines model for TransactionListRequest.
