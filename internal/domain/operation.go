@@ -5,21 +5,21 @@ import (
 	"strings"
 )
 
-type operation string
+type Op string
 
 const (
-	operationDeposit  = "DEPOSIT"
-	operationWithdraw = "WITHDRAW"
+	OpDeposit  = "DEPOSIT"
+	OpWithdraw = "WITHDRAW"
 )
 
-func NewOperation(s string) (operation, error) {
+func NewOp(s string) (Op, error) {
 	s = strings.ToUpper(s)
 	switch s {
-	case operationDeposit, operationWithdraw:
-		return operation(s), nil
+	case OpDeposit, OpWithdraw:
+		return Op(s), nil
 	}
 
-	return "", errors.New("not support transaction operation")
+	return "", errors.New("not supported transaction operation")
 }
 
-func (op operation) String() string { return string(op) }
+func (o Op) String() string { return string(o) }

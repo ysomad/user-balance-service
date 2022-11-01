@@ -37,23 +37,26 @@ func Run(conf *config.Config) {
 	}
 	defer pgClient.Close()
 
-	transactor, err := pgxatomic.NewWrapper(pgClient.Pool, pgx.TxOptions{})
+	atomicWrapper, err := pgxatomic.NewWrapper(pgClient.Pool, pgx.TxOptions{})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	// services
-	accountRepo := postgres.NewAccountRepo(pgClient)
-	revenueReportRepo := postgres.NewRevenueReportRepo(pgClient)
-	reservationRepo := postgres.NewReservationRepo(log, pgClient)
+	atomicPool := pgxatomic.NewPool(pgClient.Pool)
 
-	accountService := service.NewAccount(accountRepo, revenueReportRepo, reservationRepo)
+	// services
+	accountRepo := postgres.NewAccountRepo(atomicPool, pgClient.Builder)
+	revenueReportRepo := postgres.NewRevenueReportRepo(atomicPool, pgClient.Builder)
+	reservationRepo := postgres.NewReservationRepo(atomicPool, pgClient.Builder)
+	transactionRepo := postgres.NewTransactionRepo(atomicPool, pgClient.Builder)
+
+	accountService := service.NewAccount(accountRepo, revenueReportRepo, reservationRepo, transactionRepo)
 
 	// init handlers
 	mux := chi.NewMux()
 	mux.Use(middleware.Logger, middleware.Recoverer)
 
-	handlerV1 := v1.NewHandler(log, transactor, accountService)
+	handlerV1 := v1.NewHandler(log, atomicWrapper, accountService)
 	v1.HandlerFromMuxWithBaseURL(handlerV1, mux, "/v1")
 
 	runHTTPServer(mux, log, conf.HTTP.Port)

@@ -3,40 +3,40 @@ package postgres
 import (
 	"context"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
-
-	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
 type transactionRepo struct {
-	*pgclient.Client
-	table string
+	pool    *pgxatomic.Pool
+	builder sq.StatementBuilderType
+	table   string
 }
 
-func (r *transactionRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	return pgxatomic.Query(ctx, r.Pool, sql, args...)
-}
-
-func NewTransactionRepo(c *pgclient.Client) *transactionRepo {
-	return &transactionRepo{c, "transaction"}
+func NewTransactionRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *transactionRepo {
+	return &transactionRepo{
+		pool:    p,
+		builder: b,
+		table:   "transaction",
+	}
 }
 
 func (r *transactionRepo) Create(ctx context.Context, args dto.CreateTransactionArgs) (*domain.Transaction, error) {
-	sql, sqlArgs, err := r.Builder.
+	sql, sqlArgs, err := r.builder.
 		Insert(r.table).
-		Columns("user_id, comment, from_user_id, amount, operation").
-		Values(args.UserID, args.Comment, args.FromUserID, args.Amount, args.Operation).
-		Suffix("RETURNING id, user_id, comment, from_user_id, amount, operation, completed_at").
+		Columns("account_id, comment, amount, operation").
+		Values(sq.Expr("(SELECT id FROM account WHERE user_id = ?)", args.UserID), args.Comment, args.Amount, args.Operation).
+		Suffix("RETURNING *").
 		ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := r.query(ctx, sql, sqlArgs...)
+	rows, err := r.pool.Query(ctx, sql, sqlArgs...)
 	if err != nil {
 		return nil, err
 	}

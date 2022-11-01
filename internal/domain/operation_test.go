@@ -12,7 +12,7 @@ func TestNewOperation(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    operation
+		want    Op
 		wantErr bool
 	}{
 		{
@@ -20,7 +20,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "withdraw",
 			},
-			want:    operationWithdraw,
+			want:    OpWithdraw,
 			wantErr: false,
 		},
 		{
@@ -28,7 +28,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "WITHDRAW",
 			},
-			want:    operationWithdraw,
+			want:    OpWithdraw,
 			wantErr: false,
 		},
 		{
@@ -36,7 +36,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "WiThDraW",
 			},
-			want:    operationWithdraw,
+			want:    OpWithdraw,
 			wantErr: false,
 		},
 		{
@@ -44,7 +44,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "deposit",
 			},
-			want:    operationDeposit,
+			want:    OpDeposit,
 			wantErr: false,
 		},
 		{
@@ -52,7 +52,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "DEPOSIT",
 			},
-			want:    operationDeposit,
+			want:    OpDeposit,
 			wantErr: false,
 		},
 		{
@@ -60,7 +60,7 @@ func TestNewOperation(t *testing.T) {
 			args: args{
 				s: "DePoSiT",
 			},
-			want:    operationDeposit,
+			want:    OpDeposit,
 			wantErr: false,
 		},
 		{
@@ -74,7 +74,7 @@ func TestNewOperation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewOperation(tt.args.s)
+			got, err := NewOp(tt.args.s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewOperation() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -89,18 +89,18 @@ func TestNewOperation(t *testing.T) {
 func Test_operation_String(t *testing.T) {
 	tests := []struct {
 		name string
-		op   operation
+		op   Op
 		want string
 	}{
 		{
 			name: "success deposit",
-			op:   operationDeposit,
-			want: string(operationDeposit),
+			op:   OpDeposit,
+			want: string(OpDeposit),
 		},
 		{
 			name: "success withdraw",
-			op:   operationDeposit,
-			want: string(operationDeposit),
+			op:   OpDeposit,
+			want: string(OpDeposit),
 		},
 	}
 	for _, tt := range tests {

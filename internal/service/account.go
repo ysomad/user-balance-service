@@ -13,13 +13,15 @@ type account struct {
 	accountRepo       accountRepo
 	revenueReportRepo revenueReportRepo
 	reservationRepo   reservationRepo
+	transactionRepo   transactionRepo
 }
 
-func NewAccount(ar accountRepo, rrr revenueReportRepo, rr reservationRepo) *account {
+func NewAccount(ar accountRepo, rrr revenueReportRepo, rr reservationRepo, tr transactionRepo) *account {
 	return &account{
 		accountRepo:       ar,
 		revenueReportRepo: rrr,
 		reservationRepo:   rr,
+		transactionRepo:   tr,
 	}
 }
 
@@ -33,12 +35,17 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 		return domain.Account{}, domain.ErrZeroDeposit
 	}
 
-	t, err := domain.NewDepositTransaction(userID, depAmount)
+	acc, err := a.accountRepo.UpdateOrCreate(ctx, userID, depAmount)
 	if err != nil {
 		return domain.Account{}, err
 	}
 
-	acc, err := a.accountRepo.UpdateOrCreate(ctx, t)
+	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
+		UserID:    userID,
+		Comment:   domain.ReasonBillingDeposit,
+		Operation: domain.OpDeposit,
+		Amount:    depAmount,
+	})
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -48,16 +55,16 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 
 // ReserveFunds withdraws funds from user account and adds it to reserve account.
 func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (*dto.AccountWithReservation, error) {
-	amount, err := domain.NewAmount(args.Amount)
+	resAmount, err := domain.NewAmount(args.Amount)
 	if err != nil {
 		return nil, err
 	}
 
-	if amount.IsZero() {
+	if resAmount.IsZero() {
 		return nil, domain.ErrZeroReserveAmount
 	}
 
-	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, amount)
+	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, resAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +73,17 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 		AccountID: acc.ID,
 		ServiceID: args.ServiceID,
 		OrderID:   args.OrderID,
-		Amount:    amount,
+		Amount:    resAmount,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
+		UserID:    acc.UserID,
+		Comment:   domain.ReasonReservationWithdraw,
+		Operation: domain.OpWithdraw,
+		Amount:    resAmount,
 	})
 	if err != nil {
 		return nil, err

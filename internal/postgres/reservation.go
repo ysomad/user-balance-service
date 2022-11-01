@@ -12,29 +12,26 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/ysomad/pgxatomic"
 
-	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/domain"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
-
-	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
 type reservationRepo struct {
-	*pgclient.Client
-	log   internal.Logger
-	table string
+	pool    *pgxatomic.Pool
+	builder sq.StatementBuilderType
+	table   string
 }
 
-func NewReservationRepo(l internal.Logger, c *pgclient.Client) *reservationRepo {
-	return &reservationRepo{c, l, "reservation"}
-}
-
-func (r *reservationRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	return pgxatomic.Query(ctx, r.Pool, sql, args...)
+func NewReservationRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *reservationRepo {
+	return &reservationRepo{
+		pool:    p,
+		builder: b,
+		table:   "reservation",
+	}
 }
 
 func (r *reservationRepo) Create(ctx context.Context, args dto.CreateReservationArgs) (*domain.Reservation, error) {
-	sql, sqlArgs, err := r.Builder.
+	sql, sqlArgs, err := r.builder.
 		Insert(r.table).
 		Columns("account_id, service_id, order_id, amount").
 		Values(args.AccountID, args.ServiceID, args.OrderID, args.Amount).
@@ -44,7 +41,7 @@ func (r *reservationRepo) Create(ctx context.Context, args dto.CreateReservation
 		return nil, err
 	}
 
-	rows, err := r.query(ctx, sql, sqlArgs...)
+	rows, err := r.pool.Query(ctx, sql, sqlArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +61,7 @@ func (r *reservationRepo) Create(ctx context.Context, args dto.CreateReservation
 }
 
 func (r *reservationRepo) AddToRevenueReport(ctx context.Context, args dto.AddToRevenueReportArgs) (*domain.Reservation, error) {
-	sql, sqlArgs, err := r.Builder.
+	sql, sqlArgs, err := r.builder.
 		Update(r.table).
 		Set("is_declared", true).
 		Set("declared_at", time.Now()).
@@ -82,7 +79,7 @@ func (r *reservationRepo) AddToRevenueReport(ctx context.Context, args dto.AddTo
 		return nil, err
 	}
 
-	rows, err := r.query(ctx, sql, sqlArgs...)
+	rows, err := r.pool.Query(ctx, sql, sqlArgs...)
 	if err != nil {
 		return nil, err
 	}

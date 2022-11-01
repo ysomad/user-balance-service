@@ -10,7 +10,7 @@ import (
 )
 
 type accountRepo interface {
-	UpdateOrCreate(context.Context, domain.DepositTransaction) (domain.Account, error)
+	UpdateOrCreate(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
 	Withdraw(ctx context.Context, userID uuid.UUID, a domain.Amount) (domain.Account, error)
 }
@@ -22,4 +22,8 @@ type reservationRepo interface {
 
 type revenueReportRepo interface {
 	GetOrCreate(ctx context.Context, userID uuid.UUID) (domain.RevenueReport, error)
+}
+
+type transactionRepo interface {
+	Create(context.Context, dto.CreateTransactionArgs) (*domain.Transaction, error)
 }

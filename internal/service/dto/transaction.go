@@ -1,9 +1,13 @@
 package dto
 
+import (
+	"github.com/google/uuid"
+	"github.com/ysomad/avito-internship-task/internal/domain"
+)
+
 type CreateTransactionArgs struct {
-	UserID     string
-	Comment    string
-	FromUserID *string
-	Operation  string
-	Amount     uint64
+	UserID    uuid.UUID
+	Comment   domain.Reason
+	Operation domain.Op
+	Amount    domain.Amount
 }

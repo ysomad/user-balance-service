@@ -29,9 +29,9 @@ CREATE TYPE transaction_operation AS enum (
 
 CREATE TABLE IF NOT EXISTS transaction (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid () NOT NULL,
+    account_id uuid NOT NULL REFERENCES account (id),
     comment text NOT NULL,
-    from_user_id uuid,
     amount bigint NOT NULL,
     operation transaction_operation NOT NULL,
-    completed_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
+    commited_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

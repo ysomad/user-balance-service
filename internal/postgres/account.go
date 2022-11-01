@@ -10,28 +10,27 @@ import (
 	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal/domain"
-
-	"github.com/ysomad/avito-internship-task/internal/pkg/pgclient"
 )
 
 type accountRepo struct {
-	*pgclient.Client
-	table string
+	pool    *pgxatomic.Pool
+	builder sq.StatementBuilderType
+	table   string
 }
 
-func NewAccountRepo(c *pgclient.Client) *accountRepo {
-	return &accountRepo{c, "account"}
+func NewAccountRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *accountRepo {
+	return &accountRepo{
+		pool:    p,
+		builder: b,
+		table:   "account",
+	}
 }
 
-func (r *accountRepo) query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
-	return pgxatomic.Query(ctx, r.Pool, sql, args...)
-}
-
-func (r *accountRepo) UpdateOrCreate(ctx context.Context, t domain.DepositTransaction) (domain.Account, error) {
-	sql, args, err := r.Builder.
+func (r *accountRepo) UpdateOrCreate(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
+	sql, args, err := r.builder.
 		Insert(r.table+" as a").
 		Columns("user_id, balance").
-		Values(t.UserID(), t.Amount()).
+		Values(userID, amount).
 		Suffix("ON CONFLICT (user_id) DO UPDATE").
 		Suffix("SET balance = a.balance + EXCLUDED.balance").
 		Suffix("WHERE a.user_id = EXCLUDED.user_id").
@@ -41,7 +40,7 @@ func (r *accountRepo) UpdateOrCreate(ctx context.Context, t domain.DepositTransa
 		return domain.Account{}, err
 	}
 
-	rows, err := r.query(ctx, sql, args...)
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -55,7 +54,7 @@ func (r *accountRepo) UpdateOrCreate(ctx context.Context, t domain.DepositTransa
 }
 
 func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
-	sql, args, err := r.Builder.
+	sql, args, err := r.builder.
 		Update(r.table).
 		Set("balance", sq.Expr("balance - ?", amount.UInt64())).
 		Where(sq.And{
@@ -68,7 +67,7 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 		return domain.Account{}, err
 	}
 
-	rows, err := r.query(ctx, sql, args...)
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -86,7 +85,7 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 }
 
 func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
-	sql, args, err := r.Builder.
+	sql, args, err := r.builder.
 		Select("a.id, a.user_id, a.balance, sum(r.amount), count(*)").
 		From("account a").
 		LeftJoin("reservation r ON a.id = r.account_id").
@@ -100,7 +99,7 @@ func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domai
 		return domain.AccountAggregate{}, err
 	}
 
-	rows, err := r.query(ctx, sql, args...)
+	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
 		return domain.AccountAggregate{}, err
 	}
