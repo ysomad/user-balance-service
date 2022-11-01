@@ -23,3 +23,10 @@ type AccountWithReservation struct {
 	Account     domain.Account
 	Reservation *domain.Reservation
 }
+
+type GetTransactionListArgs struct {
+	UserID    uuid.UUID
+	PageToken string
+	PageSize  uint64
+	Sorts     domain.TransactionSorts
+}

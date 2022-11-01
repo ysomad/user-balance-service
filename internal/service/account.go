@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/ysomad/avito-internship-task/internal/domain"
+	"github.com/ysomad/avito-internship-task/internal/pkg/pagetoken"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
@@ -120,6 +122,34 @@ func (a *account) DeclareRevenue(ctx context.Context, args dto.DeclareRevenueArg
 	return res, nil
 }
 
-func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
+func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
 	return a.accountRepo.FindByUserID(ctx, userID)
+}
+
+func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactionListArgs) (domain.TransactionList, error) {
+	var (
+		lastID         uuid.UUID
+		lastCommitedAt time.Time
+		err            error
+	)
+
+	if args.PageToken != "" {
+		lastID, lastCommitedAt, err = pagetoken.Decode(args.PageToken)
+		if err != nil {
+			return domain.TransactionList{}, err
+		}
+	}
+
+	txs, err := a.transactionRepo.FindAllByUserID(ctx, dto.FindTransactionListArgs{
+		UserID:         args.UserID,
+		LastID:         lastID,
+		LastCommitedAt: lastCommitedAt,
+		Sorts:          args.Sorts,
+		PageSize:       args.PageSize,
+	})
+	if err != nil {
+		return domain.TransactionList{}, err
+	}
+
+	return domain.NewTransactionList(txs, args.PageSize)
 }

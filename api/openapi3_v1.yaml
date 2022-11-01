@@ -10,7 +10,7 @@ servers:
 tags:
 - name: account
   description: Operations with user account
-- name: reserve
+- name: reservation
   description: Operations with user reserve account
 - name: report
   description: Operations with revenue report
@@ -41,7 +41,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountAggregate'
+                $ref: '#/components/schemas/Account'
         "400":
           description: Bad Request
           content:
@@ -87,7 +87,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DepositFundsResponse'
+                $ref: '#/components/schemas/Account'
         "400":
           description: Bad Request
           content:
@@ -141,10 +141,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /reserve/{user_id}:
+  /reservations/{user_id}:
     post:
       tags:
-      - reserve
+      - reservation
       summary: Reserve funds from user account
       operationId: reserveFunds
       parameters:
@@ -188,12 +188,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /reserve/{user_id}/revenue:
+  /reservations/{user_id}/revenue:
     post:
       tags:
-      - reserve
+      - reservation
       summary: Declare revenue
-      description: Writes off money from the reserve wallet and adds it to the accounting report
+      description: Withdraw money from the reserve account and adds it to the revenue report
       operationId: declareRevenue
       parameters:
       - name: user_id
@@ -285,12 +285,10 @@ components:
           type: string
         message:
           type: string
-    AccountAggregate:
+    Account:
       required:
       - balance
       - id
-      - reservation_count
-      - reserved_balance
       - user_id
       type: object
       properties:
@@ -313,12 +311,6 @@ components:
         balance:
           type: string
           example: "49.54"
-        reserved_balance:
-          type: string
-          example: "49.54"
-        reservation_count:
-          type: number
-          x-go-type: uint32
     TransactionOperation:
       type: string
       enum:
@@ -368,7 +360,7 @@ components:
           $ref: '#/components/schemas/TransactionOperation'
     TransactionList:
       required:
-      - next_page_cursor
+      - next_page_token
       - transactions
       type: object
       properties:
@@ -376,7 +368,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transaction'
-        next_page_cursor:
+          x-go-type: any
+        next_page_token:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
     DepositFundsRequest:
@@ -413,14 +406,6 @@ components:
         amount:
           type: string
           example: "75.48"
-    DepositFundsResponse:
-      required:
-      - balance
-      type: object
-      properties:
-        balance:
-          type: string
-          example: "49.54"
     ReserveFundsResponse:
       required:
       - account_balance
@@ -547,22 +532,27 @@ components:
     TransactionListSort:
       required:
       - amount
-      - date
+      - commit_time
       type: object
       properties:
-        date:
+        commit_time:
           $ref: '#/components/schemas/SortOrder'
         amount:
           $ref: '#/components/schemas/SortOrder'
     TransactionListRequest:
       required:
-      - page_cursor
+      - page_size
+      - page_token
       - sort
       type: object
       properties:
         sort:
           $ref: '#/components/schemas/TransactionListSort'
-        page_cursor:
+        page_size:
+          type: integer
+          example: 10
+          x-go-type: uint64
+        page_token:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
   requestBodies:

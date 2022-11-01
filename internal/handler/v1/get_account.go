@@ -22,11 +22,9 @@ func (h *handler) GetAccount(w http.ResponseWriter, r *http.Request, userID uuid
 		return
 	}
 
-	writeOK(w, AccountAggregate{
-		ID:               a.ID,
-		UserID:           a.UserID,
-		Balance:          a.Balance.String(),
-		ReservedBalance:  a.ReservedAmount.String(),
-		ReservationCount: a.ReservationCount,
+	writeOK(w, Account{
+		ID:      a.ID,
+		UserID:  a.UserID,
+		Balance: a.Balance.String(),
 	})
 }

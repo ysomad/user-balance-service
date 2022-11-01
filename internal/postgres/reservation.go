@@ -17,12 +17,12 @@ import (
 )
 
 type reservationRepo struct {
-	pool    *pgxatomic.Pool
+	pool    pgxatomic.Pool
 	builder sq.StatementBuilderType
 	table   string
 }
 
-func NewReservationRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *reservationRepo {
+func NewReservationRepo(p pgxatomic.Pool, b sq.StatementBuilderType) *reservationRepo {
 	return &reservationRepo{
 		pool:    p,
 		builder: b,

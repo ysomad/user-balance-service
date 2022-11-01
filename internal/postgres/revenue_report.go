@@ -16,12 +16,12 @@ import (
 )
 
 type revenueReportRepo struct {
-	pool    *pgxatomic.Pool
+	pool    pgxatomic.Pool
 	builder sq.StatementBuilderType
 	table   string
 }
 
-func NewRevenueReportRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *revenueReportRepo {
+func NewRevenueReportRepo(p pgxatomic.Pool, b sq.StatementBuilderType) *revenueReportRepo {
 	return &revenueReportRepo{
 		pool:    p,
 		builder: b,

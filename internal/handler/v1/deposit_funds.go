@@ -48,7 +48,9 @@ func (h *handler) DepositFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	writeOK(w, DepositFundsResponse{
+	writeOK(w, Account{
+		ID:      a.ID,
+		UserID:  a.UserID,
 		Balance: a.Balance.String(),
 	})
 }

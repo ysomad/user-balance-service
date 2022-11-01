@@ -13,12 +13,12 @@ import (
 )
 
 type accountRepo struct {
-	pool    *pgxatomic.Pool
+	pool    pgxatomic.Pool
 	builder sq.StatementBuilderType
 	table   string
 }
 
-func NewAccountRepo(p *pgxatomic.Pool, b sq.StatementBuilderType) *accountRepo {
+func NewAccountRepo(p pgxatomic.Pool, b sq.StatementBuilderType) *accountRepo {
 	return &accountRepo{
 		pool:    p,
 		builder: b,
@@ -84,33 +84,28 @@ func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount dom
 	return a, nil
 }
 
-func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error) {
+func (r *accountRepo) FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error) {
 	sql, args, err := r.builder.
-		Select("a.id, a.user_id, a.balance, sum(r.amount), count(*)").
-		From("account a").
-		LeftJoin("reservation r ON a.id = r.account_id").
-		Where(sq.And{
-			sq.Eq{"a.user_id": userID},
-			sq.Eq{"r.is_declared": false},
-		}).
-		GroupBy("a.id").
+		Select("id, user_id, balance").
+		From(r.table).
+		Where(sq.Eq{"user_id": userID}).
 		ToSql()
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
 	rows, err := r.pool.Query(ctx, sql, args...)
 	if err != nil {
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
-	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.AccountAggregate])
+	a, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.Account])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.AccountAggregate{}, domain.ErrAccountNotFound
+			return domain.Account{}, domain.ErrAccountNotFound
 		}
 
-		return domain.AccountAggregate{}, err
+		return domain.Account{}, err
 	}
 
 	return a, nil

@@ -35,3 +35,5 @@ CREATE TABLE IF NOT EXISTS transaction (
     operation transaction_operation NOT NULL,
     commited_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS commited_at_idx ON transaction (commited_at);

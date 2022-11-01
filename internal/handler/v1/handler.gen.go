@@ -25,13 +25,11 @@ const (
 	WITHDRAW TransactionOperation = "WITHDRAW"
 )
 
-// AccountAggregate defines model for AccountAggregate.
-type AccountAggregate struct {
-	Balance          string           `json:"balance"`
-	ID               google_uuid.UUID `json:"id"`
-	ReservationCount uint32           `json:"reservation_count"`
-	ReservedBalance  string           `json:"reserved_balance"`
-	UserID           google_uuid.UUID `json:"user_id"`
+// Account defines model for Account.
+type Account struct {
+	Balance string           `json:"balance"`
+	ID      google_uuid.UUID `json:"id"`
+	UserID  google_uuid.UUID `json:"user_id"`
 }
 
 // DeclareRevenueRequest defines model for DeclareRevenueRequest.
@@ -54,11 +52,6 @@ type DeclareRevenueResponse struct {
 // DepositFundsRequest defines model for DepositFundsRequest.
 type DepositFundsRequest struct {
 	Amount string `json:"amount"`
-}
-
-// DepositFundsResponse defines model for DepositFundsResponse.
-type DepositFundsResponse struct {
-	Balance string `json:"balance"`
 }
 
 // Error defines model for Error.
@@ -106,20 +99,21 @@ type Transaction struct {
 
 // TransactionList defines model for TransactionList.
 type TransactionList struct {
-	NextPageCursor string        `json:"next_page_cursor"`
-	Transactions   []Transaction `json:"transactions"`
+	NextPageToken string `json:"next_page_token"`
+	Transactions  any    `json:"transactions"`
 }
 
 // TransactionListRequest defines model for TransactionListRequest.
 type TransactionListRequest struct {
-	PageCursor string              `json:"page_cursor"`
-	Sort       TransactionListSort `json:"sort"`
+	PageSize  uint64              `json:"page_size"`
+	PageToken string              `json:"page_token"`
+	Sort      TransactionListSort `json:"sort"`
 }
 
 // TransactionListSort defines model for TransactionListSort.
 type TransactionListSort struct {
-	Amount SortOrder `json:"amount"`
-	Date   SortOrder `json:"date"`
+	Amount     SortOrder `json:"amount"`
+	CommitTime SortOrder `json:"commit_time"`
 }
 
 // TransactionOperation defines model for TransactionOperation.
@@ -164,10 +158,10 @@ type ServerInterface interface {
 	// (GET /reports/{month})
 	GetRevenueReport(w http.ResponseWriter, r *http.Request, month string)
 	// Reserve funds from user account
-	// (POST /reserve/{user_id})
+	// (POST /reservations/{user_id})
 	ReserveFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Declare revenue
-	// (POST /reserve/{user_id}/revenue)
+	// (POST /reservations/{user_id}/revenue)
 	DeclareRevenue(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 }
 
@@ -462,10 +456,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/reports/{month}", wrapper.GetRevenueReport)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/reserve/{user_id}", wrapper.ReserveFunds)
+		r.Post(options.BaseURL+"/reservations/{user_id}", wrapper.ReserveFunds)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/reserve/{user_id}/revenue", wrapper.DeclareRevenue)
+		r.Post(options.BaseURL+"/reservations/{user_id}/revenue", wrapper.DeclareRevenue)
 	})
 
 	return r

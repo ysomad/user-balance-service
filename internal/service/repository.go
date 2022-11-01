@@ -11,7 +11,7 @@ import (
 
 type accountRepo interface {
 	UpdateOrCreate(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error)
-	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.AccountAggregate, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
 	Withdraw(ctx context.Context, userID uuid.UUID, a domain.Amount) (domain.Account, error)
 }
 
@@ -26,4 +26,5 @@ type revenueReportRepo interface {
 
 type transactionRepo interface {
 	Create(context.Context, dto.CreateTransactionArgs) (*domain.Transaction, error)
+	FindAllByUserID(context.Context, dto.FindTransactionListArgs) ([]domain.Transaction, error)
 }
