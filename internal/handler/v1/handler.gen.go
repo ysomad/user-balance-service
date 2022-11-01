@@ -117,6 +117,12 @@ type TransactionListSort struct {
 // TransactionOperation defines model for TransactionOperation.
 type TransactionOperation string
 
+// TransferFundsRequest defines model for TransferFundsRequest.
+type TransferFundsRequest struct {
+	Amount   string           `json:"amount"`
+	ToUserID google_uuid.UUID `json:"to_user_id"`
+}
+
 // DeclareRevenueRequestBody defines model for DeclareRevenueRequestBody.
 type DeclareRevenueRequestBody = DeclareRevenueRequest
 
@@ -129,11 +135,17 @@ type ReserveFundsRequestBody = ReserveFundsRequest
 // TransactionListRequestBody defines model for TransactionListRequestBody.
 type TransactionListRequestBody = TransactionListRequest
 
+// TransferFundsRequestBody defines model for TransferFundsRequestBody.
+type TransferFundsRequestBody = TransferFundsRequest
+
 // DepositFundsJSONRequestBody defines body for DepositFunds for application/json ContentType.
 type DepositFundsJSONRequestBody = DepositFundsRequest
 
 // GetAccountTransactionsJSONRequestBody defines body for GetAccountTransactions for application/json ContentType.
 type GetAccountTransactionsJSONRequestBody = TransactionListRequest
+
+// TransferFundsJSONRequestBody defines body for TransferFunds for application/json ContentType.
+type TransferFundsJSONRequestBody = TransferFundsRequest
 
 // ReserveFundsJSONRequestBody defines body for ReserveFunds for application/json ContentType.
 type ReserveFundsJSONRequestBody = ReserveFundsRequest
@@ -152,6 +164,9 @@ type ServerInterface interface {
 	// Get list of account balance transactions
 	// (POST /accounts/{user_id}/transactions)
 	GetAccountTransactions(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	// Transfer funds to user balance
+	// (POST /accounts/{user_id}/transfer)
+	TransferFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Get revenue report
 	// (GET /reports/{month})
 	GetRevenueReport(w http.ResponseWriter, r *http.Request, month string)
@@ -241,6 +256,32 @@ func (siw *ServerInterfaceWrapper) GetAccountTransactions(w http.ResponseWriter,
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAccountTransactions(w, r, userId)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// TransferFunds operation middleware
+func (siw *ServerInterfaceWrapper) TransferFunds(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "user_id" -------------
+	var userId google_uuid.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "user_id", runtime.ParamLocationPath, chi.URLParam(r, "user_id"), &userId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "user_id", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TransferFunds(w, r, userId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -449,6 +490,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/accounts/{user_id}/transactions", wrapper.GetAccountTransactions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/accounts/{user_id}/transfer", wrapper.TransferFunds)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/reports/{month}", wrapper.GetRevenueReport)

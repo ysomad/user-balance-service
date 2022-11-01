@@ -141,6 +141,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /accounts/{user_id}/transfer:
+    post:
+      tags:
+      - account
+      summary: Transfer funds to user balance
+      operationId: transferFunds
+      parameters:
+      - name: user_id
+        in: path
+        description: user id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+      requestBody:
+        $ref: '#/components/requestBodies/TransferFundsRequestBody'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /reservations/{user_id}:
     post:
       tags:
@@ -551,6 +592,23 @@ components:
         page_token:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
+    TransferFundsRequest:
+      required:
+      - amount
+      - to_user_id
+      type: object
+      properties:
+        to_user_id:
+          type: string
+          format: uuid
+          x-go-name: ToUserID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        amount:
+          type: string
+          example: "75.48"
   requestBodies:
     DepositFundsRequestBody:
       content:
@@ -575,4 +633,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/TransactionListRequest'
+      required: true
+    TransferFundsRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransferFundsRequest'
       required: true

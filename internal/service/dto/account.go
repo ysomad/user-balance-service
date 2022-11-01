@@ -30,3 +30,9 @@ type GetTransactionListArgs struct {
 	PageSize  uint64
 	Sorts     domain.TransactionSorts
 }
+
+type TransferFundsArgs struct {
+	FromUserID uuid.UUID
+	ToUserID   uuid.UUID
+	Amount     string
+}

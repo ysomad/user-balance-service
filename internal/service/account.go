@@ -56,19 +56,19 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 }
 
 // ReserveFunds withdraws funds from user account and adds it to reserve account.
-func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (*dto.AccountWithReservation, error) {
+func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (dto.AccountWithReservation, error) {
 	resAmount, err := domain.NewAmount(args.Amount)
 	if err != nil {
-		return nil, err
+		return dto.AccountWithReservation{}, err
 	}
 
 	if resAmount.IsZero() {
-		return nil, domain.ErrZeroReserveAmount
+		return dto.AccountWithReservation{}, domain.ErrZeroReserveAmount
 	}
 
 	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, resAmount)
 	if err != nil {
-		return nil, err
+		return dto.AccountWithReservation{}, err
 	}
 
 	res, err := a.reservationRepo.Create(ctx, dto.CreateReservationArgs{
@@ -78,7 +78,7 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 		Amount:    resAmount,
 	})
 	if err != nil {
-		return nil, err
+		return dto.AccountWithReservation{}, err
 	}
 
 	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
@@ -88,10 +88,10 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 		Amount:    resAmount,
 	})
 	if err != nil {
-		return nil, err
+		return dto.AccountWithReservation{}, err
 	}
 
-	return &dto.AccountWithReservation{
+	return dto.AccountWithReservation{
 		Account:     acc,
 		Reservation: res,
 	}, nil
@@ -156,4 +156,30 @@ func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactio
 	}
 
 	return domain.NewTransactionList(txs, args.PageSize)
+}
+
+func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs) (acc domain.Account, err error) {
+	if args.FromUserID == args.ToUserID {
+		return domain.Account{}, domain.ErrSelfTransfer
+	}
+
+	transferAmount, err := domain.NewAmount(args.Amount)
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	if transferAmount.IsZero() {
+		return domain.Account{}, domain.ErrZeroAmount
+	}
+
+	acc, err = a.accountRepo.Withdraw(ctx, args.FromUserID, transferAmount)
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	if _, err = a.accountRepo.UpdateOrCreate(ctx, args.ToUserID, transferAmount); err != nil {
+		return domain.Account{}, err
+	}
+
+	return acc, nil
 }
