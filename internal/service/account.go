@@ -140,6 +140,10 @@ func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactio
 		}
 	}
 
+	if args.PageSize > domain.MaxPageSize || args.PageSize == 0 {
+		args.PageSize = domain.DefaultPageSize
+	}
+
 	txs, err := a.transactionRepo.FindAllByUserID(ctx, dto.FindTransactionListArgs{
 		UserID:         args.UserID,
 		LastID:         lastID,

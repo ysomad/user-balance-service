@@ -3,10 +3,15 @@ package domain
 import (
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/ysomad/avito-internship-task/internal/pkg/pagetoken"
 	"github.com/ysomad/avito-internship-task/internal/pkg/sort"
+)
 
-	"github.com/google/uuid"
+const (
+	DefaultPageSize = 10
+	MaxPageSize     = 500
 )
 
 type Transaction struct {
