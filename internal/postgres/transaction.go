@@ -89,3 +89,30 @@ func (r *transactionRepo) FindAllByUserID(ctx context.Context, args dto.FindTran
 
 	return txs, nil
 }
+
+func (r *transactionRepo) CreateMultiple(ctx context.Context, args []dto.CreateTransactionArgs) ([]domain.Transaction, error) {
+	sb := r.builder.
+		Insert(r.table).
+		Columns("account_id, comment, amount, operation")
+
+	for _, a := range args {
+		sb = sb.Values(sq.Expr("(SELECT id FROM account WHERE user_id = ?)", a.UserID), a.Comment, a.Amount, a.Operation)
+	}
+
+	sql, sqlArgs, err := sb.Suffix("RETURNING *").ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.pool.Query(ctx, sql, sqlArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := pgx.CollectRows(rows, pgx.RowToStructByPos[domain.Transaction])
+	if err != nil {
+		return nil, err
+	}
+
+	return txs, nil
+}

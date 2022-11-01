@@ -158,7 +158,7 @@ func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactio
 	return domain.NewTransactionList(txs, args.PageSize)
 }
 
-func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs) (acc domain.Account, err error) {
+func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs) (domain.Account, error) {
 	if args.FromUserID == args.ToUserID {
 		return domain.Account{}, domain.ErrSelfTransfer
 	}
@@ -172,7 +172,7 @@ func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs)
 		return domain.Account{}, domain.ErrZeroAmount
 	}
 
-	acc, err = a.accountRepo.Withdraw(ctx, args.FromUserID, transferAmount)
+	fromAcc, err := a.accountRepo.Withdraw(ctx, args.FromUserID, transferAmount)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -181,5 +181,23 @@ func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs)
 		return domain.Account{}, err
 	}
 
-	return acc, nil
+	_, err = a.transactionRepo.CreateMultiple(ctx, []dto.CreateTransactionArgs{
+		{
+			UserID:    args.FromUserID,
+			Comment:   domain.ReasonTransfer(args.ToUserID),
+			Operation: domain.OpWithdraw,
+			Amount:    transferAmount,
+		},
+		{
+			UserID:    args.ToUserID,
+			Comment:   domain.ReasonTransferFrom(args.FromUserID),
+			Operation: domain.OpDeposit,
+			Amount:    transferAmount,
+		},
+	})
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	return fromAcc, nil
 }

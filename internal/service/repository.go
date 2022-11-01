@@ -26,5 +26,6 @@ type revenueReportRepo interface {
 
 type transactionRepo interface {
 	Create(context.Context, dto.CreateTransactionArgs) (*domain.Transaction, error)
+	CreateMultiple(context.Context, []dto.CreateTransactionArgs) ([]domain.Transaction, error)
 	FindAllByUserID(context.Context, dto.FindTransactionListArgs) ([]domain.Transaction, error)
 }
