@@ -10,7 +10,7 @@ import (
 type CreateTransactionArgs struct {
 	UserID    uuid.UUID
 	Comment   domain.Reason
-	Operation domain.Op
+	Operation domain.Operation
 	Amount    domain.Amount
 }
 

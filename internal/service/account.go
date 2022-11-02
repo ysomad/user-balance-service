@@ -48,7 +48,7 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
 		UserID:    userID,
 		Comment:   domain.ReasonBillingDeposit,
-		Operation: domain.OpDeposit,
+		Operation: domain.OperationDeposit,
 		Amount:    depAmount,
 	})
 	if err != nil {
@@ -87,7 +87,7 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
 		UserID:    acc.UserID,
 		Comment:   domain.ReasonReservationWithdraw,
-		Operation: domain.OpWithdraw,
+		Operation: domain.OperationWithdraw,
 		Amount:    resAmount,
 	})
 	if err != nil {
@@ -185,13 +185,13 @@ func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs)
 		{
 			UserID:    args.FromUserID,
 			Comment:   domain.ReasonTransferTo(args.ToUserID),
-			Operation: domain.OpWithdraw,
+			Operation: domain.OperationWithdraw,
 			Amount:    transferAmount,
 		},
 		{
 			UserID:    args.ToUserID,
 			Comment:   domain.ReasonTransferFrom(args.FromUserID),
-			Operation: domain.OpDeposit,
+			Operation: domain.OperationDeposit,
 			Amount:    transferAmount,
 		},
 	})
@@ -225,7 +225,7 @@ func (a *account) CancelReservation(ctx context.Context, args dto.RawCancelReser
 	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
 		UserID:    args.UserID,
 		Comment:   domain.ReasonReservationCancel(res.ServiceID, res.OrderID),
-		Operation: domain.OpDeposit,
+		Operation: domain.OperationDeposit,
 		Amount:    amount,
 	})
 	if err != nil {

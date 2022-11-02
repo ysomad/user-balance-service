@@ -48,7 +48,7 @@ func (h *handler) GetAccountTransactions(w http.ResponseWriter, r *http.Request,
 			AccountID:  d.AccountID,
 			Amount:     d.Amount.String(),
 			Comment:    string(d.Comment),
-			Operation:  TransactionOperation(d.Operation),
+			Operation:  TransactionOperation(d.Operation.String()),
 			CommitedAt: d.CommitedAt,
 		}
 	}

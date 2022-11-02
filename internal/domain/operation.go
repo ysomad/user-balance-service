@@ -1,25 +1,19 @@
 package domain
 
-import (
-	"errors"
-	"strings"
-)
-
-type Op string
+type Operation uint8
 
 const (
-	OpDeposit  = "DEPOSIT"
-	OpWithdraw = "WITHDRAW"
+	OperationUndefined = iota
+	OperationDeposit
+	OperationWithdraw
 )
 
-func NewOp(s string) (Op, error) {
-	s = strings.ToUpper(s)
-	switch s {
-	case OpDeposit, OpWithdraw:
-		return Op(s), nil
+func (o Operation) String() string {
+	switch o {
+	case OperationDeposit:
+		return "DEPOSIT"
+	case OperationWithdraw:
+		return "WITHDRAW"
 	}
-
-	return "", errors.New("not supported transaction operation")
+	return "UNDEFINED"
 }
-
-func (o Op) String() string { return string(o) }

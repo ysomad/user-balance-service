@@ -22,17 +22,12 @@ CREATE TABLE IF NOT EXISTS reservation (
     status smallint DEFAULT 1 NOT NULL
 );
 
-CREATE TYPE transaction_operation AS enum (
-    'WITHDRAW',
-    'DEPOSIT'
-);
-
 CREATE TABLE IF NOT EXISTS transaction (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid () NOT NULL,
     account_id uuid NOT NULL REFERENCES account (id),
     comment text NOT NULL,
     amount bigint NOT NULL,
-    operation transaction_operation NOT NULL,
+    operation smallint NOT NULL,
     commited_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

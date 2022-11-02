@@ -20,7 +20,7 @@ type Transaction struct {
 	AccountID  uuid.UUID
 	Comment    Reason
 	Amount     Amount
-	Operation  Op
+	Operation  Operation
 	CommitedAt time.Time
 }
 
