@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/ysomad/avito-internship-task/internal/domain"
 )
@@ -13,8 +15,9 @@ type CreateTransactionArgs struct {
 }
 
 type FindTransactionListArgs struct {
-	UserID   uuid.UUID
-	PrevID   uint32
-	Sorts    domain.TransactionSorts
-	PageSize uint64
+	UserID         uuid.UUID
+	LastID         uuid.UUID
+	LastCommitedAt time.Time
+	Sorts          domain.TransactionSorts
+	PageSize       uint64
 }

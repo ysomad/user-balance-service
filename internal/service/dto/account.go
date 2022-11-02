@@ -25,10 +25,10 @@ type AccountWithReservation struct {
 }
 
 type GetTransactionListArgs struct {
-	UserID   uuid.UUID
-	PrevID   uint32
-	PageSize uint64
-	Sorts    domain.TransactionSorts
+	UserID    uuid.UUID
+	PageToken string
+	PageSize  uint64
+	Sorts     domain.TransactionSorts
 }
 
 type TransferFundsArgs struct {

@@ -2,14 +2,17 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/ysomad/pgxatomic"
 
 	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/domain"
-	"github.com/ysomad/avito-internship-task/internal/pkg/sort"
+	paging "github.com/ysomad/avito-internship-task/internal/pkg/pagination"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
@@ -57,23 +60,20 @@ func (r *transactionRepo) FindAllByUserID(ctx context.Context, args dto.FindTran
 	sb := r.builder.
 		Select("*").
 		From(r.table).
-		Where(sq.And{
-			sq.Expr("account_id = (SELECT id FROM account WHERE user_id = ?)", args.UserID),
-			sq.GtOrEq{"id": args.PrevID},
-		})
+		Where(sq.Expr("account_id = (SELECT id FROM account WHERE user_id = ?)", args.UserID))
 
-	// handle next pages
-	// if (args.LastCommitedAt != time.Time{}) && (args.PrevID != uuid.UUID{}) {
-	// 	whereClause := fmt.Sprintf("(commited_at, id) %s (?, ?)", paging.SeekSign(args.Sorts.CommitedAt.String()))
-	// 	sb = sb.Where(sq.Expr(whereClause, args.LastCommitedAt, args.PrevID))
-	// }
+	if (args.LastCommitedAt != time.Time{}) && (args.LastID != uuid.UUID{}) {
+		whereSQL := fmt.Sprintf("(commited_at, id) %s (?, ?)", paging.SeekSign(args.Sorts.CommitedAt.String()))
+		sb = sb.Where(sq.Expr(whereSQL, args.LastCommitedAt, args.LastID))
+	}
 
-	switch {
-	case args.Sorts.CommitedAt != sort.OrderEmpty:
-		sb = sb.OrderBy(orderByClause("commited_at", args.Sorts.CommitedAt))
-	case args.Sorts.Amount != sort.OrderEmpty:
+	if args.Sorts.Amount != "" {
 		sb = sb.OrderBy(orderByClause("amount", args.Sorts.Amount))
 	}
+
+	sb = sb.
+		OrderBy(orderByClause("commited_at", args.Sorts.CommitedAt.Default())).
+		OrderBy(orderByClause("id", args.Sorts.CommitedAt.Default()))
 
 	sql, sqlArgs, err := sb.Limit(args.PageSize + 1).ToSql()
 	if err != nil {

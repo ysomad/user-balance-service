@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"github.com/ysomad/avito-internship-task/internal/pkg/pagetoken"
 	"github.com/ysomad/avito-internship-task/internal/pkg/sort"
 )
 
@@ -15,7 +16,7 @@ const (
 )
 
 type Transaction struct {
-	ID         uint32
+	ID         uuid.UUID
 	AccountID  uuid.UUID
 	Comment    Reason
 	Amount     Amount
@@ -30,7 +31,7 @@ type TransactionSorts struct {
 
 type TransactionList struct {
 	Transactions  []Transaction
-	NextPageToken uint32
+	NextPageToken string
 }
 
 func NewTransactionList(txs []Transaction, pageSize uint64) (TransactionList, error) {
@@ -40,8 +41,8 @@ func NewTransactionList(txs []Transaction, pageSize uint64) (TransactionList, er
 
 	txsLen := uint64(len(txs))
 	if txsLen == pageSize+1 {
-		log.Debug().Uint32("lastID", txs[txsLen-1].ID)
-		list.NextPageToken = txs[txsLen-1].ID
+		log.Debug().Msg(txs[txsLen-1].ID.String())
+		list.NextPageToken = pagetoken.Encode(txs[txsLen-1].ID, txs[txsLen-1].CommitedAt)
 		list.Transactions = txs[:txsLen-1]
 	}
 

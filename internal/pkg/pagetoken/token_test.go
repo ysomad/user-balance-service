@@ -73,7 +73,7 @@ func TestEncode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := EncodeUUID(tt.args.pk, tt.args.t); got != tt.want {
+			if got := Encode(tt.args.pk, tt.args.t); got != tt.want {
 				t.Errorf("Encode() = %v, want %v", got, tt.want)
 			}
 		})
@@ -108,7 +108,7 @@ func TestDecode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotUUID, gotTime, err := DecodeUUID(tt.args.cursor)
+			gotUUID, gotTime, err := Decode(tt.args.cursor)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Decode() error = %v, wantErr %v", err, tt.wantErr)
 				return
