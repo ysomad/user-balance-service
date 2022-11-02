@@ -25,7 +25,7 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 
 	var res dto.AccountWithReservation
 
-	err = h.atomic.Wrap(r.Context(), func(txCtx context.Context) error {
+	err = h.atomic.Run(r.Context(), func(txCtx context.Context) error {
 		res, err = h.account.ReserveFunds(txCtx, dto.ReserveFundsArgs{
 			UserID:    userID,
 			ServiceID: req.ServiceID,

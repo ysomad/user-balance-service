@@ -24,7 +24,7 @@ func (h *handler) TransferFunds(w http.ResponseWriter, r *http.Request, userID g
 
 	var a domain.Account
 
-	err = h.atomic.Wrap(r.Context(), func(txCtx context.Context) error {
+	err = h.atomic.Run(r.Context(), func(txCtx context.Context) error {
 		a, err = h.account.TransferFunds(txCtx, dto.TransferFundsArgs{
 			FromUserID: userID,
 			ToUserID:   req.ToUserID,

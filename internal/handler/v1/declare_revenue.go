@@ -25,7 +25,7 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 
 	var res *domain.Reservation
 
-	err = h.atomic.Wrap(r.Context(), func(txCtx context.Context) error {
+	err = h.atomic.Run(r.Context(), func(txCtx context.Context) error {
 		res, err = h.account.DeclareRevenue(txCtx, dto.DeclareRevenueArgs{
 			UserID:    userID,
 			ServiceID: req.ServiceID,

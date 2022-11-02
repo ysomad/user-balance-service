@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v5 v5.0.4
 	github.com/rs/zerolog v1.28.0
-	github.com/ysomad/pgxatomic v1.0.3
+	github.com/ysomad/pgxatomic v1.0.4
 )
 
 require (

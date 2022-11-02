@@ -12,8 +12,8 @@ import (
 
 var _ ServerInterface = &handler{}
 
-type atomicWrapper interface {
-	Wrap(context.Context, func(context.Context) error) error
+type atomicRunner interface {
+	Run(context.Context, func(context.Context) error) error
 }
 
 type accountService interface {
@@ -27,11 +27,11 @@ type accountService interface {
 
 type handler struct {
 	log     internal.Logger
-	atomic  atomicWrapper
+	atomic  atomicRunner
 	account accountService
 }
 
-func NewHandler(l internal.Logger, ar atomicWrapper, as accountService) *handler {
+func NewHandler(l internal.Logger, ar atomicRunner, as accountService) *handler {
 	return &handler{
 		log:     l,
 		atomic:  ar,

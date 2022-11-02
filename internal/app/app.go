@@ -37,7 +37,7 @@ func Run(conf *config.Config) {
 	}
 	defer pgClient.Close()
 
-	atomicWrapper, err := pgxatomic.NewWrapper(pgClient.Pool, pgx.TxOptions{})
+	atomicRunner, err := pgxatomic.NewRunner(pgClient.Pool, pgx.TxOptions{})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -56,7 +56,7 @@ func Run(conf *config.Config) {
 	mux := chi.NewMux()
 	mux.Use(middleware.Logger, middleware.Recoverer)
 
-	handlerV1 := v1.NewHandler(log, atomicWrapper, accountService)
+	handlerV1 := v1.NewHandler(log, atomicRunner, accountService)
 	v1.HandlerFromMuxWithBaseURL(handlerV1, mux, "/v1")
 
 	runHTTPServer(mux, log, conf.HTTP.Port)
