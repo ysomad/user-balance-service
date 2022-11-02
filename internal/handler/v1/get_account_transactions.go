@@ -20,9 +20,9 @@ func (h *handler) GetAccountTransactions(w http.ResponseWriter, r *http.Request,
 	}
 
 	l, err := h.account.GetTransactionList(r.Context(), dto.GetTransactionListArgs{
-		UserID:    userID,
-		PageToken: req.PageToken,
-		PageSize:  req.PageSize,
+		UserID:   userID,
+		PrevID:   req.PageToken,
+		PageSize: req.PageSize,
 		Sorts: domain.TransactionSorts{
 			Amount:     sort.NewOrder(string(req.Sort.Amount)),
 			CommitedAt: sort.NewOrder(string(req.Sort.CommitTime)),

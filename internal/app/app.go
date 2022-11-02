@@ -48,9 +48,9 @@ func Run(conf *config.Config) {
 	accountRepo := postgres.NewAccountRepo(atomicPool, pgClient.Builder)
 	revenueReportRepo := postgres.NewRevenueReportRepo(atomicPool, pgClient.Builder)
 	reservationRepo := postgres.NewReservationRepo(atomicPool, pgClient.Builder)
-	transactionRepo := postgres.NewTransactionRepo(atomicPool, pgClient.Builder)
+	transactionRepo := postgres.NewTransactionRepo(log, atomicPool, pgClient.Builder)
 
-	accountService := service.NewAccount(accountRepo, revenueReportRepo, reservationRepo, transactionRepo)
+	accountService := service.NewAccount(log, accountRepo, revenueReportRepo, reservationRepo, transactionRepo)
 
 	// init handlers
 	mux := chi.NewMux()

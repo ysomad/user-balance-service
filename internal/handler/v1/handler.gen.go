@@ -91,20 +91,20 @@ type Transaction struct {
 	Amount     string               `json:"amount"`
 	Comment    string               `json:"comment"`
 	CommitedAt time.Time            `json:"commited_at"`
-	ID         google_uuid.UUID     `json:"id"`
+	ID         uint32               `json:"id"`
 	Operation  TransactionOperation `json:"operation"`
 }
 
 // TransactionList defines model for TransactionList.
 type TransactionList struct {
-	NextPageToken string        `json:"next_page_token"`
+	NextPageToken uint32        `json:"next_page_token"`
 	Transactions  []Transaction `json:"transactions"`
 }
 
 // TransactionListRequest defines model for TransactionListRequest.
 type TransactionListRequest struct {
 	PageSize  uint64              `json:"page_size"`
-	PageToken string              `json:"page_token"`
+	PageToken uint32              `json:"page_token"`
 	Sort      TransactionListSort `json:"sort"`
 }
 

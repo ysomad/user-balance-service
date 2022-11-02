@@ -2,25 +2,27 @@ package postgres
 
 import (
 	"context"
-	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/ysomad/pgxatomic"
 
+	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/domain"
+	"github.com/ysomad/avito-internship-task/internal/pkg/sort"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
 type transactionRepo struct {
+	log     internal.Logger
 	pool    pgxatomic.Pool
 	builder sq.StatementBuilderType
 	table   string
 }
 
-func NewTransactionRepo(p pgxatomic.Pool, b sq.StatementBuilderType) *transactionRepo {
+func NewTransactionRepo(l internal.Logger, p pgxatomic.Pool, b sq.StatementBuilderType) *transactionRepo {
 	return &transactionRepo{
+		log:     l,
 		pool:    p,
 		builder: b,
 		table:   "transaction",
@@ -52,30 +54,33 @@ func (r *transactionRepo) Create(ctx context.Context, args dto.CreateTransaction
 }
 
 func (r *transactionRepo) FindAllByUserID(ctx context.Context, args dto.FindTransactionListArgs) ([]domain.Transaction, error) {
-	whereClause := sq.And{
-		sq.Expr("account_id = (SELECT id FROM account WHERE user_id = ?)", args.UserID),
-	}
-
-	if (args.LastID != uuid.UUID{}) && (args.LastCommitedAt != time.Time{}) {
-		whereClause = append(whereClause, sq.Expr("(id, commited_at) > (?, ?)", args.LastID, args.LastCommitedAt))
-	}
-
 	sb := r.builder.
 		Select("*").
 		From(r.table).
-		Where(whereClause)
+		Where(sq.And{
+			sq.Expr("account_id = (SELECT id FROM account WHERE user_id = ?)", args.UserID),
+			sq.GtOrEq{"id": args.PrevID},
+		})
+
+	// handle next pages
+	// if (args.LastCommitedAt != time.Time{}) && (args.PrevID != uuid.UUID{}) {
+	// 	whereClause := fmt.Sprintf("(commited_at, id) %s (?, ?)", paging.SeekSign(args.Sorts.CommitedAt.String()))
+	// 	sb = sb.Where(sq.Expr(whereClause, args.LastCommitedAt, args.PrevID))
+	// }
 
 	switch {
-	case args.Sorts.Amount != "":
-		sb = sb.OrderBy(orderByClause("amount", args.Sorts.Amount))
-	case args.Sorts.CommitedAt != "":
+	case args.Sorts.CommitedAt != sort.OrderEmpty:
 		sb = sb.OrderBy(orderByClause("commited_at", args.Sorts.CommitedAt))
+	case args.Sorts.Amount != sort.OrderEmpty:
+		sb = sb.OrderBy(orderByClause("amount", args.Sorts.Amount))
 	}
 
 	sql, sqlArgs, err := sb.Limit(args.PageSize + 1).ToSql()
 	if err != nil {
 		return nil, err
 	}
+
+	r.log.Debug(sql)
 
 	rows, err := r.pool.Query(ctx, sql, sqlArgs...)
 	if err != nil {

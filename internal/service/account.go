@@ -2,24 +2,25 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 
+	"github.com/ysomad/avito-internship-task/internal"
 	"github.com/ysomad/avito-internship-task/internal/domain"
-	"github.com/ysomad/avito-internship-task/internal/pkg/pagetoken"
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
 type account struct {
+	log               internal.Logger
 	accountRepo       accountRepo
 	revenueReportRepo revenueReportRepo
 	reservationRepo   reservationRepo
 	transactionRepo   transactionRepo
 }
 
-func NewAccount(ar accountRepo, rrr revenueReportRepo, rr reservationRepo, tr transactionRepo) *account {
+func NewAccount(l internal.Logger, ar accountRepo, rrr revenueReportRepo, rr reservationRepo, tr transactionRepo) *account {
 	return &account{
+		log:               l,
 		accountRepo:       ar,
 		revenueReportRepo: rrr,
 		reservationRepo:   rr,
@@ -127,29 +128,15 @@ func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Acc
 }
 
 func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactionListArgs) (domain.TransactionList, error) {
-	var (
-		lastID         uuid.UUID
-		lastCommitedAt time.Time
-		err            error
-	)
-
-	if args.PageToken != "" {
-		lastID, lastCommitedAt, err = pagetoken.Decode(args.PageToken)
-		if err != nil {
-			return domain.TransactionList{}, err
-		}
-	}
-
 	if args.PageSize > domain.MaxPageSize || args.PageSize == 0 {
 		args.PageSize = domain.DefaultPageSize
 	}
 
 	txs, err := a.transactionRepo.FindAllByUserID(ctx, dto.FindTransactionListArgs{
-		UserID:         args.UserID,
-		LastID:         lastID,
-		LastCommitedAt: lastCommitedAt,
-		Sorts:          args.Sorts,
-		PageSize:       args.PageSize,
+		UserID:   args.UserID,
+		PrevID:   args.PrevID,
+		Sorts:    args.Sorts,
+		PageSize: args.PageSize,
 	})
 	if err != nil {
 		return domain.TransactionList{}, err

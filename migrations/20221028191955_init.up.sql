@@ -28,12 +28,10 @@ CREATE TYPE transaction_operation AS enum (
 );
 
 CREATE TABLE IF NOT EXISTS transaction (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid () NOT NULL,
+    id bigserial PRIMARY KEY NOT NULL,
     account_id uuid NOT NULL REFERENCES account (id),
     comment text NOT NULL,
     amount bigint NOT NULL,
     operation transaction_operation NOT NULL,
     commited_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS commited_at_idx ON transaction (commited_at);
