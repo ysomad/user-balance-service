@@ -13,10 +13,14 @@ const (
 	ReasonBillingDeposit      Reason = "deposit from billing"
 )
 
-func ReasonTransfer(to uuid.UUID) Reason {
-	return Reason(fmt.Sprintf("transfer to user with id: %s", to.String()))
+func ReasonTransferTo(to uuid.UUID) Reason {
+	return Reason(fmt.Sprintf("transfer to user %s", to.String()))
 }
 
 func ReasonTransferFrom(from uuid.UUID) Reason {
-	return Reason(fmt.Sprintf("transfer from user with id: %s", from.String()))
+	return Reason(fmt.Sprintf("transfer from user %s", from.String()))
+}
+
+func ReasonReservationCancel(serviceID, orderID uuid.UUID) Reason {
+	return Reason(fmt.Sprintf("reservation cancel service %s of order %s", serviceID.String(), orderID.String()))
 }

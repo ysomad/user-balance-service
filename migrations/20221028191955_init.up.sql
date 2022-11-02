@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS reservation (
     service_id uuid NOT NULL,
     order_id uuid NOT NULL,
     amount bigint DEFAULT 0 NOT NULL,
-    is_declared boolean DEFAULT FALSE NOT NULL,
     created_at timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
     declared_at timestamptz,
-    revenue_report_id uuid REFERENCES revenue_report (id)
+    revenue_report_id uuid REFERENCES revenue_report (id),
+    status smallint DEFAULT 1 NOT NULL
 );
 
 CREATE TYPE transaction_operation AS enum (

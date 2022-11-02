@@ -40,7 +40,7 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 		return domain.Account{}, domain.ErrZeroDeposit
 	}
 
-	acc, err := a.accountRepo.UpdateOrCreate(ctx, userID, depAmount)
+	acc, err := a.accountRepo.DepositOrCreate(ctx, userID, depAmount)
 	if err != nil {
 		return domain.Account{}, err
 	}
@@ -59,19 +59,19 @@ func (a *account) DepositFunds(ctx context.Context, userID uuid.UUID, amount str
 }
 
 // ReserveFunds withdraws funds from user account and adds it to reserve account.
-func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (dto.AccountWithReservation, error) {
+func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (*domain.Reservation, error) {
 	resAmount, err := domain.NewAmount(args.Amount)
 	if err != nil {
-		return dto.AccountWithReservation{}, err
+		return nil, err
 	}
 
 	if resAmount.IsZero() {
-		return dto.AccountWithReservation{}, domain.ErrZeroReserveAmount
+		return nil, domain.ErrZeroReserveAmount
 	}
 
 	acc, err := a.accountRepo.Withdraw(ctx, args.UserID, resAmount)
 	if err != nil {
-		return dto.AccountWithReservation{}, err
+		return nil, err
 	}
 
 	res, err := a.reservationRepo.Create(ctx, dto.CreateReservationArgs{
@@ -81,7 +81,7 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 		Amount:    resAmount,
 	})
 	if err != nil {
-		return dto.AccountWithReservation{}, err
+		return nil, err
 	}
 
 	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
@@ -91,13 +91,10 @@ func (a *account) ReserveFunds(ctx context.Context, args dto.ReserveFundsArgs) (
 		Amount:    resAmount,
 	})
 	if err != nil {
-		return dto.AccountWithReservation{}, err
+		return nil, err
 	}
 
-	return dto.AccountWithReservation{
-		Account:     acc,
-		Reservation: res,
-	}, nil
+	return res, nil
 }
 
 func (a *account) DeclareRevenue(ctx context.Context, args dto.DeclareRevenueArgs) (*domain.Reservation, error) {
@@ -180,14 +177,14 @@ func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs)
 		return domain.Account{}, err
 	}
 
-	if _, err = a.accountRepo.UpdateOrCreate(ctx, args.ToUserID, transferAmount); err != nil {
+	if _, err = a.accountRepo.DepositOrCreate(ctx, args.ToUserID, transferAmount); err != nil {
 		return domain.Account{}, err
 	}
 
 	_, err = a.transactionRepo.CreateMultiple(ctx, []dto.CreateTransactionArgs{
 		{
 			UserID:    args.FromUserID,
-			Comment:   domain.ReasonTransfer(args.ToUserID),
+			Comment:   domain.ReasonTransferTo(args.ToUserID),
 			Operation: domain.OpWithdraw,
 			Amount:    transferAmount,
 		},
@@ -203,4 +200,37 @@ func (a *account) TransferFunds(ctx context.Context, args dto.TransferFundsArgs)
 	}
 
 	return fromAcc, nil
+}
+
+func (a *account) CancelReservation(ctx context.Context, args dto.RawCancelReservationArgs) (*domain.Reservation, error) {
+	amount, err := domain.NewAmount(args.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.reservationRepo.Cancel(ctx, dto.CancelReservationArgs{
+		Amount:    amount,
+		UserID:    args.UserID,
+		ServiceID: args.ServiceID,
+		OrderID:   args.OrderID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = a.accountRepo.Deposit(ctx, args.UserID, amount); err != nil {
+		return nil, err
+	}
+
+	_, err = a.transactionRepo.Create(ctx, dto.CreateTransactionArgs{
+		UserID:    args.UserID,
+		Comment:   domain.ReasonReservationCancel(res.ServiceID, res.OrderID),
+		Operation: domain.OpDeposit,
+		Amount:    amount,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

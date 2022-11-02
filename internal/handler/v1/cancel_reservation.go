@@ -12,9 +12,9 @@ import (
 	"github.com/ysomad/avito-internship-task/internal/service/dto"
 )
 
-func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
+func (h *handler) CancelReservation(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
 	var (
-		req DeclareRevenueRequest
+		req CancelReservationRequest
 		err error
 	)
 
@@ -26,7 +26,7 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 	var res *domain.Reservation
 
 	err = h.atomic.Run(r.Context(), func(txCtx context.Context) error {
-		res, err = h.account.DeclareRevenue(txCtx, dto.DeclareRevenueArgs{
+		res, err = h.account.CancelReservation(txCtx, dto.RawCancelReservationArgs{
 			UserID:    userID,
 			ServiceID: req.ServiceID,
 			OrderID:   req.OrderID,
@@ -43,13 +43,7 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 		h.log.Error(err.Error())
 
 		switch {
-		case errors.Is(err, domain.ErrAccountNotFound):
-			writeError(w, http.StatusBadRequest, domain.ErrAccountNotFound)
-			return
-		case errors.Is(err, domain.ErrZeroAmount):
-			writeError(w, http.StatusBadRequest, err)
-			return
-		case errors.Is(err, domain.ErrReservationNotDeclared):
+		case errors.Is(err, domain.ErrReservationNotFound):
 			writeError(w, http.StatusNotFound, err)
 			return
 		}
@@ -61,11 +55,11 @@ func (h *handler) DeclareRevenue(w http.ResponseWriter, r *http.Request, userID 
 	writeOK(w, &Reservation{
 		ID:              res.ID,
 		Amount:          res.Amount.String(),
-		DeclaredAt:      res.DeclaredAt,
 		CreatedAt:       res.CreatedAt,
+		DeclaredAt:      res.DeclaredAt,
+		ServiceID:       res.ServiceID,
 		OrderID:         res.OrderID,
 		RevenueReportID: res.RevenueReportID,
-		ServiceID:       res.ServiceID,
 		Status:          ReservationStatus(res.Status.String()),
 	})
 }

@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrReservationNotDeclared = errors.New("service and order with amount of funds to declare not found")
+	ErrReservationNotFound    = errors.New("reservation not found")
 )
 
 type Reservation struct {
@@ -17,8 +18,8 @@ type Reservation struct {
 	ServiceID       uuid.UUID
 	OrderID         uuid.UUID
 	Amount          Amount
-	Declared        bool
 	CreatedAt       time.Time
 	DeclaredAt      *time.Time
-	RevenueReportID uuid.UUID
+	RevenueReportID *uuid.UUID
+	Status          ReservationStatus
 }

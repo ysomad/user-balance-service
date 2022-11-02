@@ -19,10 +19,11 @@ type atomicRunner interface {
 type accountService interface {
 	DepositFunds(ctx context.Context, userID uuid.UUID, amount string) (domain.Account, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Account, error)
-	ReserveFunds(context.Context, dto.ReserveFundsArgs) (dto.AccountWithReservation, error)
+	ReserveFunds(context.Context, dto.ReserveFundsArgs) (*domain.Reservation, error)
 	DeclareRevenue(context.Context, dto.DeclareRevenueArgs) (*domain.Reservation, error)
 	GetTransactionList(ctx context.Context, args dto.GetTransactionListArgs) (domain.TransactionList, error)
 	TransferFunds(ctx context.Context, args dto.TransferFundsArgs) (domain.Account, error)
+	CancelReservation(ctx context.Context, args dto.RawCancelReservationArgs) (*domain.Reservation, error)
 }
 
 type handler struct {

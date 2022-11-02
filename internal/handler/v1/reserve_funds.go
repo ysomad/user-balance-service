@@ -23,7 +23,7 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	var res dto.AccountWithReservation
+	var res *domain.Reservation
 
 	err = h.atomic.Run(r.Context(), func(txCtx context.Context) error {
 		res, err = h.account.ReserveFunds(txCtx, dto.ReserveFundsArgs{
@@ -54,12 +54,14 @@ func (h *handler) ReserveFunds(w http.ResponseWriter, r *http.Request, userID uu
 		return
 	}
 
-	writeOK(w, &ReserveFundsResponse{
-		AccountBalance: res.Account.Balance.String(),
-		ReservedAmount: res.Reservation.Amount.String(),
-		Declared:       res.Reservation.Declared,
-		ReservedAt:     res.Reservation.CreatedAt,
-		ServiceID:      res.Reservation.ServiceID,
-		OrderID:        res.Reservation.OrderID,
+	writeOK(w, &Reservation{
+		ID:              res.ID,
+		Amount:          res.Amount.String(),
+		CreatedAt:       res.CreatedAt,
+		DeclaredAt:      res.DeclaredAt,
+		ServiceID:       res.ServiceID,
+		OrderID:         res.OrderID,
+		RevenueReportID: res.RevenueReportID,
+		Status:          ReservationStatus(res.Status.String()),
 	})
 }

@@ -26,7 +26,7 @@ func NewAccountRepo(p pgxatomic.Pool, b sq.StatementBuilderType) *accountRepo {
 	}
 }
 
-func (r *accountRepo) UpdateOrCreate(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
+func (r *accountRepo) DepositOrCreate(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
 	sql, args, err := r.builder.
 		Insert(r.table+" as a").
 		Columns("user_id, balance").
@@ -51,6 +51,29 @@ func (r *accountRepo) UpdateOrCreate(ctx context.Context, userID uuid.UUID, amou
 	}
 
 	return a, nil
+}
+func (r *accountRepo) Deposit(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {
+	sql, args, err := r.builder.
+		Update(r.table).
+		Set("balance", sq.Expr("balance + ?", amount)).
+		Where(sq.Eq{"user_id": userID}).
+		Suffix("RETURNING id, user_id, balance").
+		ToSql()
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	rows, err := r.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	acc, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[domain.Account])
+	if err != nil {
+		return domain.Account{}, err
+	}
+
+	return acc, nil
 }
 
 func (r *accountRepo) Withdraw(ctx context.Context, userID uuid.UUID, amount domain.Amount) (domain.Account, error) {

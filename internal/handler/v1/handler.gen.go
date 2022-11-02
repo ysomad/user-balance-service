@@ -13,6 +13,13 @@ import (
 	google_uuid "github.com/google/uuid"
 )
 
+// Defines values for ReservationStatus.
+const (
+	ACTIVE   ReservationStatus = "ACTIVE"
+	CANCELED ReservationStatus = "CANCELED"
+	DECLARED ReservationStatus = "DECLARED"
+)
+
 // Defines values for SortOrder.
 const (
 	ASC  SortOrder = "ASC"
@@ -32,21 +39,18 @@ type Account struct {
 	UserID  google_uuid.UUID `json:"user_id"`
 }
 
-// DeclareRevenueRequest defines model for DeclareRevenueRequest.
-type DeclareRevenueRequest struct {
+// CancelReservationRequest defines model for CancelReservationRequest.
+type CancelReservationRequest struct {
 	Amount    string           `json:"amount"`
 	OrderID   google_uuid.UUID `json:"order_id"`
 	ServiceID google_uuid.UUID `json:"service_id"`
 }
 
-// DeclareRevenueResponse defines model for DeclareRevenueResponse.
-type DeclareRevenueResponse struct {
-	DeclaredAmount  string           `json:"declared_amount"`
-	DeclaredAt      *time.Time       `json:"declared_at,omitempty"`
-	Declared        bool             `json:"is_declared"`
-	OrderID         google_uuid.UUID `json:"order_id"`
-	RevenueReportID google_uuid.UUID `json:"revenue_report_id"`
-	ServiceID       google_uuid.UUID `json:"service_id"`
+// DeclareRevenueRequest defines model for DeclareRevenueRequest.
+type DeclareRevenueRequest struct {
+	Amount    string           `json:"amount"`
+	OrderID   google_uuid.UUID `json:"order_id"`
+	ServiceID google_uuid.UUID `json:"service_id"`
 }
 
 // DepositFundsRequest defines model for DepositFundsRequest.
@@ -60,21 +64,26 @@ type Error struct {
 	Status  string `json:"status"`
 }
 
+// Reservation defines model for Reservation.
+type Reservation struct {
+	Amount          string            `json:"amount"`
+	CreatedAt       time.Time         `json:"created_at"`
+	DeclaredAt      *time.Time        `json:"declared_at,omitempty"`
+	ID              google_uuid.UUID  `json:"id"`
+	OrderID         google_uuid.UUID  `json:"order_id"`
+	RevenueReportID *google_uuid.UUID `json:"revenue_report_id,omitempty"`
+	ServiceID       google_uuid.UUID  `json:"service_id"`
+	Status          ReservationStatus `json:"status"`
+}
+
+// ReservationStatus defines model for ReservationStatus.
+type ReservationStatus string
+
 // ReserveFundsRequest defines model for ReserveFundsRequest.
 type ReserveFundsRequest struct {
 	Amount    string           `json:"amount"`
 	OrderID   google_uuid.UUID `json:"order_id"`
 	ServiceID google_uuid.UUID `json:"service_id"`
-}
-
-// ReserveFundsResponse defines model for ReserveFundsResponse.
-type ReserveFundsResponse struct {
-	AccountBalance string           `json:"account_balance"`
-	Declared       bool             `json:"is_declared"`
-	OrderID        google_uuid.UUID `json:"order_id"`
-	ReservedAmount string           `json:"reserved_amount"`
-	ReservedAt     time.Time        `json:"reserved_at"`
-	ServiceID      google_uuid.UUID `json:"service_id"`
 }
 
 // RevenueReportResponse defines model for RevenueReportResponse.
@@ -123,6 +132,9 @@ type TransferFundsRequest struct {
 	ToUserID google_uuid.UUID `json:"to_user_id"`
 }
 
+// CancelReservationRequestBody defines model for CancelReservationRequestBody.
+type CancelReservationRequestBody = CancelReservationRequest
+
 // DeclareRevenueRequestBody defines model for DeclareRevenueRequestBody.
 type DeclareRevenueRequestBody = DeclareRevenueRequest
 
@@ -150,6 +162,9 @@ type TransferFundsJSONRequestBody = TransferFundsRequest
 // ReserveFundsJSONRequestBody defines body for ReserveFunds for application/json ContentType.
 type ReserveFundsJSONRequestBody = ReserveFundsRequest
 
+// CancelReservationJSONRequestBody defines body for CancelReservation for application/json ContentType.
+type CancelReservationJSONRequestBody = CancelReservationRequest
+
 // DeclareRevenueJSONRequestBody defines body for DeclareRevenue for application/json ContentType.
 type DeclareRevenueJSONRequestBody = DeclareRevenueRequest
 
@@ -173,6 +188,9 @@ type ServerInterface interface {
 	// Reserve funds from user account
 	// (POST /reservations/{user_id})
 	ReserveFunds(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
+	// Сancel reservation for a canceled service
+	// (POST /reservations/{user_id}/cancel)
+	CancelReservation(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
 	// Declare revenue
 	// (POST /reservations/{user_id}/revenue)
 	DeclareRevenue(w http.ResponseWriter, r *http.Request, userId google_uuid.UUID)
@@ -343,6 +361,32 @@ func (siw *ServerInterfaceWrapper) ReserveFunds(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// CancelReservation operation middleware
+func (siw *ServerInterfaceWrapper) CancelReservation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "user_id" -------------
+	var userId google_uuid.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "user_id", runtime.ParamLocationPath, chi.URLParam(r, "user_id"), &userId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "user_id", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelReservation(w, r, userId)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // DeclareRevenue operation middleware
 func (siw *ServerInterfaceWrapper) DeclareRevenue(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -499,6 +543,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/reservations/{user_id}", wrapper.ReserveFunds)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/reservations/{user_id}/cancel", wrapper.CancelReservation)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/reservations/{user_id}/revenue", wrapper.DeclareRevenue)

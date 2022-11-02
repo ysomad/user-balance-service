@@ -210,7 +210,55 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReserveFundsResponse'
+                $ref: '#/components/schemas/Reservation'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Account Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reservations/{user_id}/cancel:
+    post:
+      tags:
+      - reservation
+      summary: Сancel reservation for a canceled service
+      description: Cancel reservation and return money to account.
+      operationId: cancelReservation
+      parameters:
+      - name: user_id
+        in: path
+        description: user_id id in uuid format
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+      requestBody:
+        $ref: '#/components/requestBodies/CancelReservationRequestBody'
+      responses:
+        "200":
+          description: Funds returned to account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
         "400":
           description: Bad Request
           content:
@@ -258,7 +306,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeclareRevenueResponse'
+                $ref: '#/components/schemas/Reservation'
         "400":
           description: Bad Request
           content:
@@ -409,6 +457,61 @@ components:
         next_page_token:
           type: string
           example: U3dhZ2dlciByb2Nrcw==
+    Reservation:
+      required:
+      - amount
+      - created_at
+      - id
+      - order_id
+      - service_id
+      - status
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          x-go-name: ID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        amount:
+          type: string
+          example: "75.48"
+        declared_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
+        created_at:
+          type: string
+          format: datetime
+          x-go-type: time.Time
+        service_id:
+          type: string
+          format: uuid
+          x-go-name: ServiceID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        order_id:
+          type: string
+          format: uuid
+          x-go-name: OrderID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        revenue_report_id:
+          type: string
+          format: uuid
+          x-go-name: RevenueReportID
+          x-go-type: google_uuid.UUID
+          x-go-type-import:
+            name: google_uuid
+            path: github.com/google/uuid
+        status:
+          $ref: '#/components/schemas/ReservationStatus'
     DepositFundsRequest:
       required:
       - amount
@@ -508,13 +611,10 @@ components:
         amount:
           type: string
           example: "75.48"
-    DeclareRevenueResponse:
+    CancelReservationRequest:
       required:
-      - account_id
-      - declared_amount
-      - is_declared
+      - amount
       - order_id
-      - revenue_report_id
       - service_id
       type: object
       properties:
@@ -534,24 +634,9 @@ components:
           x-go-type-import:
             name: google_uuid
             path: github.com/google/uuid
-        declared_amount:
+        amount:
           type: string
           example: "75.48"
-        is_declared:
-          type: boolean
-          x-go-name: Declared
-        declared_at:
-          type: string
-          format: datetime
-          x-go-type: time.Time
-        revenue_report_id:
-          type: string
-          format: uuid
-          x-go-name: RevenueReportID
-          x-go-type: google_uuid.UUID
-          x-go-type-import:
-            name: google_uuid
-            path: github.com/google/uuid
     RevenueReportResponse:
       required:
       - report_url
@@ -566,6 +651,12 @@ components:
       enum:
       - ASC
       - DESC
+    ReservationStatus:
+      type: string
+      enum:
+      - CANCELED
+      - ACTIVE
+      - DECLARED
     TransactionListSort:
       required:
       - amount
@@ -639,4 +730,10 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/TransferFundsRequest'
+      required: true
+    CancelReservationRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CancelReservationRequest'
       required: true
