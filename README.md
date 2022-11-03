@@ -1,4 +1,4 @@
-# Avito internship task - user wallet service
+# Avito internship task - user balance service
 
 ## Local development
 1. Run all containers except applicaton one:
@@ -39,6 +39,3 @@ $ make compose-down
 
 ### TODO
 1. Загрузка отчета по выручке в csv и загрузка в s3 или локально
-
-6. Навести порядок в handler/v1
-
