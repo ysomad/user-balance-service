@@ -40,7 +40,6 @@ func (h *handler) GetAccountTransactions(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// TODO: don't like this very much, find better solution
 	txs := make([]Transaction, len(l.Transactions))
 	for i, d := range l.Transactions {
 		txs[i] = Transaction{

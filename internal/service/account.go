@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -127,30 +126,26 @@ func (a *account) GetByUserID(ctx context.Context, userID uuid.UUID) (domain.Acc
 }
 
 func (a *account) GetTransactionList(ctx context.Context, args dto.GetTransactionListArgs) (domain.TransactionList, error) {
-	var (
-		lastID         uuid.UUID
-		lastCommitedAt time.Time
-		err            error
-	)
+	var err error
+
+	d := dto.FindTransactionListArgs{
+		UserID:   args.UserID,
+		Sorts:    args.Sorts,
+		PageSize: args.PageSize,
+	}
 
 	if args.PageToken != "" {
-		lastID, lastCommitedAt, err = pagetoken.Decode(args.PageToken)
+		d.LastID, d.LastCommitedAt, err = pagetoken.Decode(args.PageToken)
 		if err != nil {
 			return domain.TransactionList{}, err
 		}
 	}
 
 	if args.PageSize > domain.MaxPageSize || args.PageSize == 0 {
-		args.PageSize = domain.DefaultPageSize
+		d.PageSize = domain.DefaultPageSize
 	}
 
-	txs, err := a.transactionRepo.FindAllByUserID(ctx, dto.FindTransactionListArgs{
-		UserID:         args.UserID,
-		LastID:         lastID,
-		LastCommitedAt: lastCommitedAt,
-		Sorts:          args.Sorts,
-		PageSize:       args.PageSize,
-	})
+	txs, err := a.transactionRepo.FindAllByUserID(ctx, d)
 	if err != nil {
 		return domain.TransactionList{}, err
 	}
