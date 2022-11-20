@@ -1,5 +1,8 @@
 # User balance service
 
+## Docs
+API documentation located in api folder in OpenAPI v3 format.
+
 ## Features
 - get user account
 - deposit funds to user account
